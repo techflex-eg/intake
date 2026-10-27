@@ -77,10 +77,18 @@ button { font: inherit; }
 .hd { position: absolute; width: 34px; height: 34px; background: #ffd966; border: 3px solid #1d1b25; border-radius: 50%; touch-action: none; }
 .hd.tl { left: -17px; top: -17px; } .hd.tr { right: -17px; top: -17px; } .hd.bl { left: -17px; bottom: -17px; } .hd.br { right: -17px; bottom: -17px; }
 /* review */
-.docimgs { display: flex; gap: 8px; margin-bottom: 10px; }
-.docimgs canvas { flex: 1; min-width: 0; max-height: 120px; object-fit: contain; background: var(--bg); border-radius: 8px; border: 1px solid var(--line); }
-.docimgs canvas.big { max-height: none; }
-.docimgs.one { flex-direction: column; }
+.docimgs { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.dimg { position: relative; margin-top: 14px; }
+.dimg canvas { width: 100%; height: auto; display: block; background: var(--bg); border-radius: 8px; border: 1px solid var(--line); }
+.dimg.small { margin-top: 0; }
+.dimg.small canvas { width: auto; max-width: 100%; max-height: 110px; }
+.mark { position: absolute; border: 3px solid #e53935; border-radius: 4px; pointer-events: none; }
+.mark.on { border-color: #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.55); }
+.mark b, .num { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: #e53935; color: #fff; font-size: 12px; font-weight: 700; }
+.mark b { position: absolute; left: -3px; bottom: 100%; margin-bottom: 2px; }
+.num { margin-right: 6px; }
+.prev.none { color: var(--muted); font-size: 14px; padding: 26px 6px; }
+.chip.opt { background: var(--bg); color: var(--muted); }
 .f input { margin: 0; }
 .f.bad input, .f.bad select { background: var(--bad-bg); border-color: var(--bad); }
 .f.hand input, .f.hand select { background: var(--hand-bg); border-color: #d4a400; }
@@ -129,11 +137,11 @@ button { font: inherit; }
     </div>
     <div class="card">
       <h3>Photos of the documents</h3>
-      <p class="note" style="margin-top:0">Add 1 to 6 photos. One photo can show many documents.</p>
+      <p class="note" style="margin-top:0">Add 1 to 10 photos. One photo can show many documents. A photo of anything else is ignored.</p>
       <input id="file" type="file" accept="image/*" multiple hidden>
       <button class="btn" id="addph" type="button" style="margin-top:10px">Add photos</button>
       <div id="thumbs"></div>
-      <p class="note" id="phcount">0 of 6 photos</p>
+      <p class="note" id="phcount">0 of 10 photos</p>
     </div>
     <p class="note err" id="e1"></p>
     <div class="busy" id="b1"><div class="spin"></div><div id="b1t">Finding the documents...</div></div>
@@ -142,8 +150,8 @@ button { font: inherit; }
 
   <!-- step 2: the six pictures -->
   <section id="s2">
-    <h2>Check the 6 pictures</h2>
-    <p class="note" style="margin-top:-6px">Each picture must show only its document. Tap Adjust and drag with your finger to fix it.</p>
+    <h2>Check the pictures</h2>
+    <p class="note" style="margin-top:-6px">Each picture must show only its document. Tap Adjust and drag with your finger to fix it. The back pictures are optional.</p>
     <div id="slots"></div>
     <p class="note err" id="e2"></p>
     <div class="busy" id="b2"><div class="spin"></div><div id="b2t">Reading the documents... this can take up to a minute.</div></div>
@@ -181,7 +189,7 @@ button { font: inherit; }
   var GOV = ['01', '02', '03', '04', '11', '12', '13', '14', '15', '16', '17', '18', '19', '21', '22', '23', '24', '25', '26', '27', '28', '29', '31', '32', '33', '34', '35', '88'];
   var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var DAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  var MAXP = 6;
+  var MAXP = 10;
   var PHOTO_SIDE = 1800;
   var LOCATE_SIDE = 1100;
   var CROP_SIDE = 1400;
@@ -210,7 +218,7 @@ button { font: inherit; }
     ['next1', 'next2', 'back2', 'save', 'back3', 'addph'].forEach(function (b) { $(b).disabled = !!on; });
     if (!on) {
       $('addph').disabled = S.photos.length >= MAXP;
-      $('next2').disabled = !(S.slots.length && S.slots.every(function (s) { return s.ok; }));
+      $('next2').disabled = !(S.slots.length && allDone());
     }
   }
 
@@ -420,6 +428,8 @@ button { font: inherit; }
     S.open = -1;
     paintSlots();
   }
+  function needed(slot) { return /_front$/.test(slot.side); }                              // the front is a must (the data is on it), the back is optional
+  function allDone() { return S.slots.every(function (s) { return s.ok || !needed(s); }); }
   function renderCrop(slot, side) {
     var src = S.photos[slot.photo].canvas;
     var b = slot.box;
@@ -442,30 +452,31 @@ button { font: inherit; }
     var box = $('slots');
     box.innerHTML = '';
     S.slots.forEach(function (slot, i) {
-      var card = el('div', 'slot ' + (slot.ok ? 'okk' : 'miss'));
+      var card = el('div', 'slot ' + (slot.ok ? 'okk' : (needed(slot) ? 'miss' : '')));
       var top = el('div', 'top');
       top.appendChild(el('span', '', SIDE_TEXT[slot.side]));
-      top.appendChild(el('span', 'chip ' + (slot.ok ? 'good' : 'bad'), slot.ok ? (slot.found ? 'Found' : 'Done') : 'Not found'));
+      top.appendChild(el('span', 'chip ' + (slot.ok ? 'good' : (needed(slot) ? 'bad' : 'opt')), slot.ok ? (slot.found ? 'Found' : 'Done') : (needed(slot) ? 'Not found' : 'Not found (optional)')));
       card.appendChild(top);
       var prev = el('div', 'prev');
-      prev.appendChild(renderCrop(slot, 600));
+      if (slot.ok) prev.appendChild(renderCrop(slot, 600));
+      else { prev.className = 'prev none'; prev.textContent = 'No picture yet'; }
       card.appendChild(prev);
       var row = el('div', 'row');
-      var adj = el('button', 'btn small', S.open === i ? 'Close' : 'Adjust');
+      var adj = el('button', 'btn small', S.open === i ? 'Close' : (slot.ok ? 'Adjust' : 'Select'));
       adj.type = 'button';
       adj.onclick = function () { S.open = S.open === i ? -1 : i; paintSlots(); };
       var rot = el('button', 'btn small', 'Rotate');
       rot.type = 'button';
       rot.onclick = function () { slot.rot = (slot.rot + 90) % 360; paintSlots(); };
       row.appendChild(adj);
-      row.appendChild(rot);
+      if (slot.ok) row.appendChild(rot);
       card.appendChild(row);
       if (S.open === i) card.appendChild(editor(slot));
       box.appendChild(card);
     });
-    var all = S.slots.every(function (s) { return s.ok; });
+    var all = allDone();
     $('next2').disabled = S.busy || !all;
-    say('e2', all ? '' : 'Fix the pictures that say Not found: tap Adjust, drag the yellow frame over the document, then tap Done.');
+    say('e2', all ? '' : 'A front picture is missing (red). Tap Select, drag the yellow frame over the document, then tap Done. A back picture is optional.');
     var st = S.open !== -1 ? box.querySelector('.stage') : null;
     if (st && st.scrollIntoView) st.scrollIntoView({ block: 'center' });                    // the frame must not hide under the bar
   }
@@ -526,13 +537,14 @@ button { font: inherit; }
       var card = wrap.parentNode;
       if (!card) return;
       var p = card.querySelector('.prev');
+      p.className = 'prev';
       p.innerHTML = '';
       p.appendChild(renderCrop(slot, 600));
       card.className = 'slot okk';
       var chip = card.querySelector('.chip');
       chip.className = 'chip good';
       chip.textContent = slot.found ? 'Found' : 'Done';
-      var all = S.slots.every(function (s) { return s.ok; });
+      var all = allDone();
       $('next2').disabled = S.busy || !all;
       say('e2', all ? '' : $('e2').textContent);
     }
@@ -555,6 +567,7 @@ button { font: inherit; }
     if (S.busy) return;
     var docs = { id: {}, dl: {}, vl: {} };
     S.slots.forEach(function (s) {
+      if (!s.ok) return;
       var data = renderCrop(s, CROP_SIDE).toDataURL('image/jpeg', 0.85);
       s.data = data;
       var d = s.side.slice(0, 2), part = s.side.slice(3);
@@ -627,7 +640,7 @@ button { font: inherit; }
     }
     if (ok && expiry < today) add('dl_expiry', 'DL expired');
     if (!String(f.plate || '').trim()) add('plate', 'Bad plate');
-    if (!/^[A-Z0-9]{8,25}$/.test(String(f.vin || '').toUpperCase().replace(/[^A-Z0-9]/g, ''))) add('vin', 'Bad VIN');
+    if (!/^[A-Z0-9]{5,25}$/.test(String(f.vin || '').toUpperCase().replace(/[^A-Z0-9]/g, ''))) add('vin', 'Bad VIN');
     if (f.compliance !== 'COMMERCIAL' && f.compliance !== 'NON-COMMERCIAL') add('compliance', 'Bad compliance');
     Object.keys(DOC_FIELDS).forEach(function (d) { if ((r.unclear || {})[d]) DOC_FIELDS[d].forEach(function (x) { if (!edited[x]) add(x, 'Unclear photo: ' + DOC_TEXT[d]); }); });
     // what the server found about the old drivers stays until the girl changes that field
@@ -642,7 +655,8 @@ button { font: inherit; }
     { doc: 'dl', title: 'Driving License', fields: [['name', 'DA Name (as on the license)', 'text'], ['dl_issue', 'DL issuance date (dd/mm/yyyy)', 'text'], ['dl_expiry', 'DL expiration date (dd/mm/yyyy)', 'text']] },
     { doc: 'vl', title: 'Vehicle License', fields: [['plate', 'Vehicle plate', 'text'], ['vin', 'Chassis number (VIN)', 'text'], ['compliance', 'Compliance', 'select']] }
   ];
-  function slotData(side) { var s = S.slots.filter(function (x) { return x.side === side; })[0]; return s ? renderCrop(s, 500) : null; }
+  function slotHas(side) { return S.slots.some(function (x) { return x.side === side && x.ok; }); }
+  function slotData(side) { var s = S.slots.filter(function (x) { return x.side === side && x.ok; })[0]; return s ? renderCrop(s, 700) : null; }
   function paintReview() {
     var box = $('docs');
     box.innerHTML = '';
@@ -654,14 +668,43 @@ button { font: inherit; }
       var card = el('div', 'card');
       card.appendChild(el('h3', '', g.title));
       var imgs = el('div', 'docimgs');
+      var boxes = (S.read && S.read.boxes) || {};
+      var nums = {}, n = 0;
+      g.fields.forEach(function (f) {
+        var b = boxes[f[0]];
+        if (b && slotHas(g.doc + '_' + b.image)) nums[f[0]] = ++n;
+      });
       ['front', 'back'].forEach(function (p) {
         var c = slotData(g.doc + '_' + p);
         if (!c) return;
-        c.onclick = function () { c.classList.toggle('big'); imgs.classList.toggle('one'); };
-        imgs.appendChild(c);
+        var marked = g.fields.some(function (f) { return nums[f[0]] && boxes[f[0]].image === p; });
+        var w = el('div', 'dimg' + (marked ? '' : ' small'));
+        w.appendChild(c);
+        g.fields.forEach(function (f) {
+          var b = boxes[f[0]];
+          if (!nums[f[0]] || b.image !== p) return;
+          var m = el('div', 'mark');
+          m.id = 'm_' + f[0];
+          m.style.top = (b.box[0] / 10) + '%';
+          m.style.left = (b.box[1] / 10) + '%';
+          m.style.height = ((b.box[2] - b.box[0]) / 10) + '%';
+          m.style.width = ((b.box[3] - b.box[1]) / 10) + '%';
+          m.appendChild(el('b', '', String(nums[f[0]])));
+          w.appendChild(m);
+        });
+        imgs.appendChild(w);
       });
       card.appendChild(imgs);
-      g.fields.forEach(function (f) { card.appendChild(fieldRow(f[0], f[1], f[2])); });
+      g.fields.forEach(function (f) {
+        var row = fieldRow(f[0], f[1], f[2]);
+        if (nums[f[0]]) {
+          row.firstChild.insertBefore(el('span', 'num', String(nums[f[0]])), row.firstChild.firstChild);
+          var inp = row.querySelector('input,select');
+          inp.addEventListener('focus', function () { var m = $('m_' + f[0]); if (m) m.classList.add('on'); });
+          inp.addEventListener('blur', function () { var m = $('m_' + f[0]); if (m) m.classList.remove('on'); });
+        }
+        card.appendChild(row);
+      });
       if (g.doc === 'id') {
         var dob = el('div', 'f');
         dob.id = 'f_dob';
@@ -739,7 +782,7 @@ button { font: inherit; }
   $('save').onclick = function () {
     if (S.busy) return;
     var images = {};
-    S.slots.forEach(function (s) { images[s.side] = (s.data || renderCrop(s, CROP_SIDE).toDataURL('image/jpeg', 0.85)).replace(/^data:image\/jpeg;base64,/, ''); });
+    S.slots.forEach(function (s) { if (!s.ok) return; images[s.side] = (s.data || renderCrop(s, CROP_SIDE).toDataURL('image/jpeg', 0.85)).replace(/^data:image\/jpeg;base64,/, ''); });
     var f = S.fields;
     var args = {
       moderator: $('mod').value, phone: f.phone, area: $('area').value, vehicle: S.vehicle, day0: $('day').value,
