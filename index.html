@@ -151,10 +151,10 @@ button { font: inherit; }
   <!-- step 2: the six pictures -->
   <section id="s2">
     <h2>Check the pictures</h2>
-    <p class="note" style="margin-top:-6px">Each picture must show only its document. Tap Adjust and drag with your finger to fix it. The back pictures are optional.</p>
+    <p class="note" style="margin-top:-6px">Each picture must show only its document, turned the right way: the face photo on the left, the plate number on top. Tap Adjust to fix the frame, Rotate to turn it. The back pictures and the driver photo are optional.</p>
     <div id="slots"></div>
     <p class="note err" id="e2"></p>
-    <div class="busy" id="b2"><div class="spin"></div><div id="b2t">Reading the documents... this can take up to a minute.</div></div>
+    <div class="busy" id="b2"><div class="spin"></div><div id="b2t">Reading the documents...</div></div>
     <div class="bar"><div class="in"><button class="btn" id="back2">Back</button><button class="btn fill" id="next2">Read documents</button></div></div>
   </section>
 
@@ -164,7 +164,7 @@ button { font: inherit; }
     <div id="sum" class="sum ok"></div>
     <div id="docs"></div>
     <p class="note err" id="e3"></p>
-    <div class="busy" id="b3"><div class="spin"></div><div>Saving...</div></div>
+    <div class="busy" id="b3"><div class="spin"></div><div id="b3t">Saving...</div></div>
     <div class="bar"><div class="in"><button class="btn" id="back3">Back</button><button class="btn fill" id="save">Save driver</button></div></div>
   </section>
 
@@ -184,15 +184,19 @@ button { font: inherit; }
 (function () {
   'use strict';
   var CFG = window.INTAKE_CONFIG || {};
-  var SIDES = ['id_front', 'id_back', 'dl_front', 'dl_back', 'vl_front', 'vl_back'];
-  var SIDE_TEXT = { id_front: 'ID front', id_back: 'ID back', dl_front: 'Driving License front', dl_back: 'Driving License back', vl_front: 'Vehicle License front', vl_back: 'Vehicle License back' };
+  var SIDES = ['id_front', 'id_back', 'dl_front', 'dl_back', 'vl_front', 'vl_back', 'driver_photo'];
+  var DOC_OF = { id_front: ['id', 'front'], id_back: ['id', 'back'], dl_front: ['dl', 'front'], dl_back: ['dl', 'back'], vl_front: ['vl', 'front'], vl_back: ['vl', 'back'] };      // the driver photo is not a document: it is not read
+  var SIDE_TEXT = { id_front: 'ID front', id_back: 'ID back', dl_front: 'Driving License front', dl_back: 'Driving License back', vl_front: 'Vehicle License front', vl_back: 'Vehicle License back', driver_photo: 'Driver photo' };
   var GOV = ['01', '02', '03', '04', '11', '12', '13', '14', '15', '16', '17', '18', '19', '21', '22', '23', '24', '25', '26', '27', '28', '29', '31', '32', '33', '34', '35', '88'];
   var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var DAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   var MAXP = 10;
-  var PHOTO_SIDE = 1800;
-  var LOCATE_SIDE = 1100;
-  var CROP_SIDE = 1400;
+  var PHOTO_SIDE = 1800;                    // the copy of a photo that is kept in the memory (to look at and to find the documents)
+  var FULL_SIDE = 3000;                     // the copy that a cut-out is taken from for the AI and for Drive: the cut-out is zoomed, not blurred
+  var LOCATE_SIDE = 1000;
+  var ORIENT_SIDE = 520;
+  var READ_FRONT = 1280, READ_BACK = 900, SAVE_SIDE = 1600;
+  var WAIT = Object.assign({ locate: 100000, orient: 60000, read: 180000, save: 150000, ping: 30000 }, CFG.waits || {});      // how long the page waits for each call (ms)
 
   var pidn = 0;
   var S = { code: '', info: null, photos: [], slots: [], vehicle: '', step: 'gate', open: -1, read: null, fields: {}, orig: {}, edited: {}, rid: '', busy: false };
@@ -211,10 +215,16 @@ button { font: inherit; }
     window.scrollTo(0, 0);
   }
   function say(id, text) { $(id).textContent = text || ''; }
+  var ticker = null;
   function busy(id, on, text) {
     S.busy = on;
     $(id).classList.toggle('on', !!on);
-    if (text && $(id + 't')) $(id + 't').textContent = text;
+    if (ticker) { clearInterval(ticker); ticker = null; }
+    if (on && text && $(id + 't')) {
+      var t0 = Date.now(), node = $(id + 't');
+      node.textContent = text;
+      ticker = setInterval(function () { node.textContent = text + ' ' + Math.round((Date.now() - t0) / 1000) + ' s'; }, 1000);      // she sees that it is alive
+    }
     ['next1', 'next2', 'back2', 'save', 'back3', 'addph'].forEach(function (b) { $(b).disabled = !!on; });
     if (!on) {
       $('addph').disabled = S.photos.length >= MAXP;
@@ -225,16 +235,25 @@ button { font: inherit; }
   // ---------- the server ----------
   function api(fn, args, rid) {
     if (!CFG.url || /^PASTE/.test(CFG.url)) return Promise.reject(new Error('The page is not connected yet. Tell the manager.'));
-    return fetch(CFG.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ code: S.code, fn: fn, args: args || {}, rid: rid || '' }) })
+    var ctl = window.AbortController ? new AbortController() : null;
+    var late = false;
+    var timer = ctl ? setTimeout(function () { late = true; ctl.abort(); }, WAIT[fn] || 120000) : null;       // a call that never ends is stopped
+    return fetch(CFG.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ code: S.code, fn: fn, args: args || {}, rid: rid || '' }), signal: ctl ? ctl.signal : undefined })
       .then(function (res) { return res.json(); })
       .then(function (j) {
+        clearTimeout(timer);
         if (!j.ok) {
           var e = new Error(j.error || 'Something went wrong.');
           e.auth = !!j.auth;
           throw e;
         }
         return j.r;
-      }, function () { throw new Error('No connection. Check the internet and try again.'); });
+      }, function (err) {
+        clearTimeout(timer);
+        if (late) throw new Error('It is taking too long. Check the internet and try again.');
+        if (err && err.name === 'SyntaxError') throw new Error('The server did not answer well. Try again.');
+        throw new Error('No connection. Check the internet and try again.');
+      });
   }
   function failed(err, errId) {
     if (err && err.auth && /^Wrong|Too many/.test(err.message)) { store('intakeCode', ''); S.code = ''; say('gerr', err.message); show('gate'); return; }
@@ -322,7 +341,7 @@ button { font: inherit; }
   function loadPhoto(file) {
     var url = URL.createObjectURL(file);
     var img = new Image();
-    var slot = { canvas: null, pending: true, id: ++pidn };
+    var slot = { canvas: null, file: file, pending: true, id: ++pidn };
     S.photos.push(slot);
     paintThumbs();
     img.onload = function () {
@@ -393,12 +412,18 @@ button { font: inherit; }
     var sig = S.photos.map(function (p) { return p.id; }).join(',');
     if (S.slots.length && S.sig === sig) { show('s2'); paintSlots(); return; }          // the same photos: the pictures stay as they are
     busy('b1', true, 'Finding the documents...');
-    var images = S.photos.map(function (p) { return jpeg(p.canvas, LOCATE_SIDE, 0.72); });
+    var images = S.photos.map(function (p) { return jpeg(p.canvas, LOCATE_SIDE, 0.7); });
     api('locate', { images: images }).then(function (r) {
-      busy('b1', false);
-      S.sig = sig;
-      buildSlots(r.docs || []);
-      show('s2');
+      var slots = makeSlots(r.docs || []);
+      busy('b1', true, 'Turning the pictures the right way...');
+      return turnAll(slots).then(function () {
+        busy('b1', false);
+        S.sig = sig;
+        S.slots = slots;
+        S.open = -1;
+        show('s2');
+        paintSlots();
+      });
     }).catch(function (err) {
       busy('b1', false);
       failed(err, 'e1');
@@ -417,21 +442,50 @@ button { font: inherit; }
     }
     return c.toDataURL('image/jpeg', q);
   }
-  function buildSlots(found) {
+  function makeSlots(found) {
     var by = {};
     found.forEach(function (d) { by[d.side] = d; });
-    S.slots = SIDES.map(function (side) {
+    return SIDES.map(function (side) {
       var d = by[side];
-      if (d && d.photo < S.photos.length) return { side: side, photo: d.photo, box: d.box.slice(), rot: d.rotation || 0, ok: true, found: true };
-      return { side: side, photo: 0, box: [200, 150, 800, 850], rot: 0, ok: false, found: false };
+      if (d && d.photo < S.photos.length) return { side: side, photo: d.photo, box: d.box.slice(), rot: d.rotation || 0, ok: true, found: true, turned: false };
+      return { side: side, photo: 0, box: [200, 150, 800, 850], rot: 0, ok: false, found: false, turned: false };
     });
-    S.open = -1;
-    paintSlots();
   }
-  function needed(slot) { return /_front$/.test(slot.side); }                              // the front is a must (the data is on it), the back is optional
-  function allDone() { return S.slots.every(function (s) { return s.ok || !needed(s); }); }
-  function renderCrop(slot, side) {
-    var src = S.photos[slot.photo].canvas;
+  // A second look at the cut-outs: each one is sent as it is cut and turned by the first guess. The AI tells where the landmark is (the face photo on the
+  // ID and the license, the plate number of the vehicle license, the barcode of the ID back) and the server works out the EXTRA turn. It is not a must:
+  // when it fails the first guess stays and the girl has the button Rotate.
+  function turnItem(slot) {
+    return { side: slot.side, image: jpeg(renderCrop(slot, ORIENT_SIDE), ORIENT_SIDE, 0.7) };
+  }
+  function applyTurns(slots, r) {
+    ((r && r.items) || []).forEach(function (it) {
+      var slot = slots.filter(function (x) { return x.side === it.side; })[0];
+      if (slot && typeof it.rotation === 'number') { slot.rot = (slot.rot + it.rotation) % 360; slot.turned = true; }
+    });
+  }
+  function turnAll(slots) {
+    var list = slots.filter(function (x) { return x.ok; });
+    if (!list.length) return Promise.resolve();
+    return api('orient', { items: list.map(turnItem) }).then(function (r) { applyTurns(slots, r); }, function () { });
+  }
+  function turnOne(slot) {
+    if (slot.turned) return Promise.resolve();
+    if (slot.turning) return slot.turning;
+    var before = slot.rot;
+    slot.turning = api('orient', { items: [turnItem(slot)] }).then(function (r) {
+      if (slot.rot === before) applyTurns([slot], r);                // the girl turned it herself in the meantime: her turn stays
+      slot.turned = true;
+    }, function () { }).then(function () {
+      slot.turning = null;
+      if (S.step === 's2') paintSlots();
+    });
+    if (S.step === 's2') paintSlots();
+    return slot.turning;
+  }
+  function needed(slot) { return /_front$/.test(slot.side); }                              // the front is a must (the data is on it); the back and the driver photo are optional
+  function allDone() { return S.slots.every(function (s) { return (s.ok || !needed(s)) && !s.turning; }); }
+  function renderCrop(slot, side, from) {
+    var src = from || S.photos[slot.photo].canvas;
     var b = slot.box;
     var sx = b[1] / 1000 * src.width, sy = b[0] / 1000 * src.height;
     var sw = Math.max(1, (b[3] - b[1]) / 1000 * src.width), sh = Math.max(1, (b[2] - b[0]) / 1000 * src.height);
@@ -557,25 +611,69 @@ button { font: inherit; }
     }
     var done = el('button', 'btn small fill', 'Done');
     done.type = 'button';
-    done.onclick = function () { slot.ok = true; S.open = -1; paintSlots(); };
+    done.onclick = function () { slot.ok = true; S.open = -1; paintSlots(); if (!slot.found) turnOne(slot); };      // a picture she drew by hand is turned by the AI too
     row.appendChild(done);
     wrap.appendChild(row);
     return wrap;
   }
   $('back2').onclick = function () { if (!S.busy) show('s1'); };
+  // The cut-outs for the AI and for Drive are taken from the full photo (one photo at a time, to spare the memory of the phone): the zoom shows the small letters well.
+  function loadFull(photo) {
+    return new Promise(function (resolve) {
+      if (!photo || !photo.file) return resolve(null);
+      var url = URL.createObjectURL(photo.file);
+      var img = new Image();
+      img.onload = function () {
+        var k = Math.min(1, FULL_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+        var c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.naturalWidth * k));
+        c.height = Math.max(1, Math.round(img.naturalHeight * k));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve(c);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); resolve(null); };
+      img.src = url;
+    });
+  }
+  // Gives { side: { read, save } } (data URLs): read = smaller, for the AI; save = for Drive.
+  function cropsFor(slots) {
+    var out = {}, groups = {};
+    slots.forEach(function (s) { (groups[s.photo] = groups[s.photo] || []).push(s); });
+    var chain = Promise.resolve();
+    Object.keys(groups).forEach(function (k) {
+      chain = chain.then(function () { return loadFull(S.photos[+k]); }).then(function (full) {
+        groups[k].forEach(function (s) {
+          var front = /_front$/.test(s.side);
+          out[s.side] = {
+            read: renderCrop(s, front ? READ_FRONT : READ_BACK, full || undefined).toDataURL('image/jpeg', front ? 0.82 : 0.7),
+            save: renderCrop(s, SAVE_SIDE, full || undefined).toDataURL('image/jpeg', 0.85)
+          };
+        });
+        if (full) { full.width = 1; full.height = 1; }
+      });
+    });
+    return chain.then(function () { return out; });
+  }
   $('next2').onclick = function () {
     if (S.busy) return;
-    var docs = { id: {}, dl: {}, vl: {} };
-    S.slots.forEach(function (s) {
-      if (!s.ok) return;
-      var data = renderCrop(s, CROP_SIDE).toDataURL('image/jpeg', 0.85);
-      s.data = data;
-      var d = s.side.slice(0, 2), part = s.side.slice(3);
-      docs[d][part] = data;
-    });
     say('e2', '');
-    busy('b2', true);
-    api('read', { id: docs.id, dl: docs.dl, vl: docs.vl, phone: $('phone').value }).then(function (r) {
+    busy('b2', true, 'Preparing the pictures...');
+    var wait = S.slots.filter(function (s) { return s.ok && !s.found && !s.turned; }).map(turnOne);              // a picture that she drew and did not close with Done
+    Promise.all(wait).then(function () {
+      return cropsFor(S.slots.filter(function (s) { return s.ok; }));
+    }).then(function (crops) {
+      var docs = { id: {}, dl: {}, vl: {} };
+      S.slots.forEach(function (s) {
+        var c = crops[s.side];
+        if (!c) return;
+        s.data = c.save;
+        var m = DOC_OF[s.side];
+        if (m) docs[m[0]][m[1]] = c.read;
+      });
+      busy('b2', true, 'Reading the documents...');
+      return api('read', { id: docs.id, dl: docs.dl, vl: docs.vl, phone: $('phone').value });
+    }).then(function (r) {
       busy('b2', false);
       S.read = r;
       S.fields = Object.assign({}, r.fields);
@@ -662,6 +760,8 @@ button { font: inherit; }
     box.innerHTML = '';
     var drv = el('div', 'card');
     drv.appendChild(el('h3', '', 'Driver'));
+    var face = slotData('driver_photo');
+    if (face) { var fw = el('div', 'dimg small'); fw.appendChild(face); drv.appendChild(fw); }
     drv.appendChild(fieldRow('phone', 'Phone', 'tel'));
     box.appendChild(drv);
     GROUPS.forEach(function (g) {
@@ -782,7 +882,7 @@ button { font: inherit; }
   $('save').onclick = function () {
     if (S.busy) return;
     var images = {};
-    S.slots.forEach(function (s) { if (!s.ok) return; images[s.side] = (s.data || renderCrop(s, CROP_SIDE).toDataURL('image/jpeg', 0.85)).replace(/^data:image\/jpeg;base64,/, ''); });
+    S.slots.forEach(function (s) { if (!s.ok) return; images[s.side] = (s.data || renderCrop(s, SAVE_SIDE).toDataURL('image/jpeg', 0.85)).replace(/^data:image\/jpeg;base64,/, ''); });
     var f = S.fields;
     var args = {
       moderator: $('mod').value, phone: f.phone, area: $('area').value, vehicle: S.vehicle, day0: $('day').value,
@@ -791,7 +891,7 @@ button { font: inherit; }
     };
     if (!S.rid) S.rid = (window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'r' + Date.now() + Math.random().toString(36).slice(2));
     say('e3', '');
-    busy('b3', true);
+    busy('b3', true, 'Saving...');
     api('save', args, S.rid).then(function (r) {
       busy('b3', false);
       S.rid = '';
