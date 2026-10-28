@@ -19,6 +19,7 @@ body { padding-bottom: 96px; }
 header { position: sticky; top: 0; z-index: 5; background: var(--brand); color: #fff; padding: 10px 16px; padding-top: max(10px, env(safe-area-inset-top)); }
 .brand { font-weight: 700; font-size: 18px; }
 .brand span { font-weight: 400; opacity: .85; }
+.brand small { font-weight: 400; font-size: 11px; opacity: .55; margin-left: 4px; }
 #steps { display: flex; gap: 6px; margin-top: 8px; }
 #steps i { flex: 1; height: 5px; border-radius: 3px; background: rgba(255,255,255,.35); }
 #steps i.on { background: #fff; }
@@ -82,11 +83,27 @@ button { font: inherit; }
 .dimg canvas { width: 100%; height: auto; display: block; background: var(--bg); border-radius: 8px; border: 1px solid var(--line); }
 .dimg.small { margin-top: 0; }
 .dimg.small canvas { width: auto; max-width: 100%; max-height: 110px; }
-.mark { position: absolute; border: 3px solid #e53935; border-radius: 4px; pointer-events: none; }
-.mark.on { border-color: #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.55); }
-.mark b, .num { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: #e53935; color: #fff; font-size: 12px; font-weight: 700; }
-.mark b { position: absolute; left: -3px; bottom: 100%; margin-bottom: 2px; }
-.num { margin-right: 6px; }
+.num { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: #e53935; color: #fff; font-size: 12px; font-weight: 700; margin-right: 6px; }
+/* an arrow beside the value (it never covers the value); the value of the field that she touches gets a bigger orange arrow and a line under it */
+.arw { position: absolute; display: flex; align-items: center; pointer-events: none; z-index: 3; filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 1px 2px rgba(0,0,0,.4)); }
+.arw b { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px; background: #e53935; color: #fff; font-size: 14px; font-weight: 800; }
+.arw i { width: 0; height: 0; flex: none; }
+.arw.l { flex-direction: row; transform: translate(calc(-100% - 3px), -50%); transform-origin: 100% 50%; }
+.arw.l i { border-top: 9px solid transparent; border-bottom: 9px solid transparent; border-left: 13px solid #e53935; margin-left: -2px; }
+.arw.r { flex-direction: row-reverse; transform: translate(3px, -50%); transform-origin: 0 50%; }
+.arw.r i { border-top: 9px solid transparent; border-bottom: 9px solid transparent; border-right: 13px solid #e53935; margin-right: -2px; }
+.arw.t { flex-direction: column; transform: translate(-50%, calc(-100% - 3px)); transform-origin: 50% 100%; }
+.arw.t i { border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 13px solid #e53935; margin-top: -2px; }
+.arw.b { flex-direction: column-reverse; transform: translate(-50%, 3px); transform-origin: 50% 0; }
+.arw.b i { border-left: 9px solid transparent; border-right: 9px solid transparent; border-bottom: 13px solid #e53935; margin-bottom: -2px; }
+.arw.on.l { transform: translate(calc(-100% - 3px), -50%) scale(1.3); }
+.arw.on.r { transform: translate(3px, -50%) scale(1.3); }
+.arw.on.t { transform: translate(-50%, calc(-100% - 3px)) scale(1.3); }
+.arw.on.b { transform: translate(-50%, 3px) scale(1.3); }
+.arw.on b { background: #ff9800; }
+.arw.on.l i { border-left-color: #ff9800; } .arw.on.r i { border-right-color: #ff9800; } .arw.on.t i { border-top-color: #ff9800; } .arw.on.b i { border-bottom-color: #ff9800; }
+.und { position: absolute; height: 4px; margin-top: 1px; background: #ff9800; border-radius: 2px; pointer-events: none; display: none; z-index: 2; }
+.und.on { display: block; }
 .prev.none { color: var(--muted); font-size: 14px; padding: 26px 6px; }
 .chip.opt { background: var(--bg); color: var(--muted); }
 .f input { margin: 0; }
@@ -104,7 +121,7 @@ button { font: inherit; }
 </head>
 <body>
 <header>
-  <div class="brand">TechFlex <span>Intake</span></div>
+  <div class="brand">TechFlex <span>Intake</span> <small id="ver">v72</small></div>
   <div id="steps"><i></i><i></i><i></i></div>
 </header>
 
@@ -130,6 +147,7 @@ button { font: inherit; }
       <input id="phone" type="tel" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="01XXXXXXXXX">
       <label for="area">Area</label>
       <input id="area" type="text" dir="auto" maxlength="60" autocomplete="off">
+      <p class="note" style="margin:4px 0 0">Arabic or English: it is saved in English.</p>
       <label>Vehicle type</label>
       <div class="seg" id="veh"></div>
       <label for="day">Day0 date</label>
@@ -162,6 +180,7 @@ button { font: inherit; }
   <section id="s3">
     <h2>Check the data</h2>
     <div id="sum" class="sum ok"></div>
+    <div id="readnote" class="sum warn" style="display:none"></div>
     <div id="docs"></div>
     <p class="note err" id="e3"></p>
     <div class="busy" id="b3"><div class="spin"></div><div id="b3t">Saving...</div></div>
@@ -195,13 +214,15 @@ button { font: inherit; }
   var FULL_SIDE = 3000;                     // the copy that a cut-out is taken from for the AI and for Drive: the cut-out is zoomed, not blurred
   var LOCATE_SIDE = 1000;
   var ORIENT_SIDE = 520;
-  var READ_FRONT = 1280, READ_BACK = 900, SAVE_SIDE = 1600;
-  var WAIT = Object.assign({ locate: 100000, orient: 60000, read: 180000, save: 150000, ping: 30000 }, CFG.waits || {});      // how long the page waits for each call (ms)
+  var READ_FRONT = 1600, READ_BACK = 1100, ZOOM_W = 1500, SAVE_SIDE = 1600, VIEW_SIDE = 900;      // the AI gets each card BIGGER (a small card is zoomed up to 6 times) and sharper
+  var MAX_UP = 6, VIEW_UP = 3;
+  var WAIT = Object.assign({ locate: 100000, orient: 60000, read: 240000, save: 150000, ping: 30000 }, CFG.waits || {});      // how long the page waits for each call (ms)
 
   var pidn = 0;
-  var S = { code: '', info: null, photos: [], slots: [], vehicle: '', step: 'gate', open: -1, read: null, fields: {}, orig: {}, edited: {}, rid: '', busy: false };
+  var S = { code: '', info: null, photos: [], slots: [], vehicle: '', step: 'gate', open: -1, read: null, fields: {}, orig: {}, edited: {}, seen: {}, area: '', areaTask: null, rid: '', busy: false };
 
   function $(id) { return document.getElementById(id); }
+  function hasArabic(v) { return /[\u0600-\u06FF]/.test(String(v || '')); }
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k) || ''; localStorage.setItem(k, v); } catch (e) { } return ''; }
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; }
 
@@ -409,6 +430,12 @@ button { font: inherit; }
     say('e1', '');
     store('intakeMod', mod);
     $('phone').value = phone;
+    var areaText = $('area').value.replace(/\s+/g, ' ').trim();
+    if (areaText !== S.areaIn) {                                                                    // the area in English: the server has a list of the usual areas and asks the AI for the rest
+      S.areaIn = areaText;
+      S.area = areaText;
+      S.areaTask = hasArabic(areaText) ? api('area', { text: areaText }).then(function (r) { if (r && r.area && S.areaIn === areaText) S.area = r.area; }, function () { }) : Promise.resolve();
+    }
     var sig = S.photos.map(function (p) { return p.id; }).join(',');
     if (S.slots.length && S.sig === sig) { show('s2'); paintSlots(); return; }          // the same photos: the pictures stay as they are
     busy('b1', true, 'Finding the documents...');
@@ -484,24 +511,114 @@ button { font: inherit; }
   }
   function needed(slot) { return /_front$/.test(slot.side); }                              // the front is a must (the data is on it); the back and the driver photo are optional
   function allDone() { return S.slots.every(function (s) { return (s.ok || !needed(s)) && !s.turning; }); }
-  function renderCrop(slot, side, from) {
+  // The cut-out of a slot at the size of the photo (turned as the slot says): no zoom, no blur yet.
+  function nativeCrop(slot, from) {
     var src = from || S.photos[slot.photo].canvas;
     var b = slot.box;
     var sx = b[1] / 1000 * src.width, sy = b[0] / 1000 * src.height;
     var sw = Math.max(1, (b[3] - b[1]) / 1000 * src.width), sh = Math.max(1, (b[2] - b[0]) / 1000 * src.height);
     var rot = ((slot.rot % 360) + 360) % 360;
     var swap = rot === 90 || rot === 270;
-    var ow = swap ? sh : sw, oh = swap ? sw : sh;
-    var k = Math.min(1, side / Math.max(ow, oh));
     var c = document.createElement('canvas');
-    c.width = Math.max(1, Math.round(ow * k));
-    c.height = Math.max(1, Math.round(oh * k));
+    c.width = Math.max(1, Math.round(swap ? sh : sw));
+    c.height = Math.max(1, Math.round(swap ? sw : sh));
     var g = c.getContext('2d');
     g.translate(c.width / 2, c.height / 2);
     g.rotate(rot * Math.PI / 180);
-    g.drawImage(src, sx, sy, sw, sh, -sw * k / 2, -sh * k / 2, sw * k, sh * k);
+    g.drawImage(src, sx, sy, sw, sh, -sw / 2, -sh / 2, sw, sh);
     return c;
   }
+  // A canvas so that its long side is `side`. Bigger: at most maxUp times, in steps of two (a good quality). Smaller: in one step.
+  function scaleTo(c, side, maxUp, copy) {
+    var k = side / Math.max(c.width, c.height);
+    if (k > maxUp) k = maxUp;
+    if (k > 0.98 && k < 1.02) {
+      if (!copy) return c;
+      var same = document.createElement('canvas');                         // a copy: the next steps (sharpening) must not change the cut-out that is used again
+      same.width = c.width; same.height = c.height;
+      same.getContext('2d').drawImage(c, 0, 0);
+      return same;
+    }
+    var tw = Math.max(1, Math.round(c.width * k)), th = Math.max(1, Math.round(c.height * k));
+    var cur = c, w = c.width, h = c.height;
+    while (w !== tw || h !== th) {
+      var nw = k > 1 ? Math.min(tw, w * 2) : tw, nh = k > 1 ? Math.min(th, h * 2) : th;
+      var n = document.createElement('canvas');
+      n.width = nw; n.height = nh;
+      var g = n.getContext('2d');
+      g.imageSmoothingEnabled = true;
+      g.imageSmoothingQuality = 'high';
+      g.drawImage(cur, 0, 0, nw, nh);
+      cur = n; w = nw; h = nh;
+    }
+    return cur;
+  }
+  function boxBlur(a, w, h, r) {
+    var tmp = new Float32Array(a.length), out = new Float32Array(a.length), win = 2 * r + 1, x, y, k, acc;
+    for (y = 0; y < h; y++) {
+      var row = y * w;
+      acc = 0;
+      for (k = -r; k <= r; k++) acc += a[row + Math.min(w - 1, Math.max(0, k))];
+      for (x = 0; x < w; x++) {
+        tmp[row + x] = acc / win;
+        acc += a[row + Math.min(w - 1, x + r + 1)] - a[row + Math.max(0, x - r)];
+      }
+    }
+    for (x = 0; x < w; x++) {
+      acc = 0;
+      for (k = -r; k <= r; k++) acc += tmp[Math.min(h - 1, Math.max(0, k)) * w + x];
+      for (y = 0; y < h; y++) {
+        out[y * w + x] = acc / win;
+        acc += tmp[Math.min(h - 1, y + r + 1) * w + x] - tmp[Math.max(0, y - r) * w + x];
+      }
+    }
+    return out;
+  }
+  // Sharper and clearer: the light and the dark are stretched (1% at each end is left out), then an unsharp mask on the light (the colors stay). Changes the canvas; gives it back.
+  function enhance(c, r) {
+    var w = c.width, h = c.height, n = w * h;
+    if (n > 7000000) return c;
+    var g = c.getContext('2d'), im, i;
+    try { im = g.getImageData(0, 0, w, h); } catch (e) { return c; }
+    var d = im.data, hist = new Uint32Array(256);
+    for (i = 0; i < n; i++) hist[(d[4 * i] * 77 + d[4 * i + 1] * 150 + d[4 * i + 2] * 29) >> 8]++;
+    var cut = n * 0.01, acc = 0, lo, hi;
+    for (lo = 0; lo < 255; lo++) { acc += hist[lo]; if (acc > cut) break; }
+    acc = 0;
+    for (hi = 255; hi > 0; hi--) { acc += hist[hi]; if (acc > cut) break; }
+    if (hi - lo < 30) return c;                                                  // a flat picture: nothing to stretch
+    var sc = 255 / (hi - lo), lut = new Uint8ClampedArray(256);
+    for (i = 0; i < 256; i++) lut[i] = Math.round((i - lo) * sc);
+    var y = new Float32Array(n);
+    for (i = 0; i < n; i++) {
+      var R = lut[d[4 * i]], G = lut[d[4 * i + 1]], B = lut[d[4 * i + 2]];
+      d[4 * i] = R; d[4 * i + 1] = G; d[4 * i + 2] = B;
+      y[i] = (R * 77 + G * 150 + B * 29) / 256;
+    }
+    var blur = boxBlur(y, w, h, r || 2);
+    for (i = 0; i < n; i++) {
+      var dl = 0.9 * (y[i] - blur[i]);
+      if (dl > 60) dl = 60; else if (dl < -60) dl = -60;
+      d[4 * i] = Math.max(0, Math.min(255, d[4 * i] + dl));
+      d[4 * i + 1] = Math.max(0, Math.min(255, d[4 * i + 1] + dl));
+      d[4 * i + 2] = Math.max(0, Math.min(255, d[4 * i + 2] + dl));
+    }
+    g.putImageData(im, 0, 0);
+    return c;
+  }
+  function toUrl(c, q) { return c.toDataURL('image/jpeg', q); }
+  // A part of a cut-out (from the top a to the bottom b, 0 to 1), as big as the AI likes, for reading the small letters.
+  function band(base, a, b) {
+    var y0 = Math.round(base.height * a), y1 = Math.round(base.height * b);
+    var c = document.createElement('canvas');
+    c.width = base.width; c.height = Math.max(1, y1 - y0);
+    c.getContext('2d').drawImage(base, 0, y0, c.width, c.height, 0, 0, c.width, c.height);
+    return toUrl(enhance(scaleTo(c, ZOOM_W, MAX_UP), 3), 0.85);
+  }
+  // For the screens (never bigger than the photo): the pictures of step 2 and the AI turning.
+  function renderCrop(slot, side, from) { return scaleTo(nativeCrop(slot, from), side, 1); }
+  // For the girl to read in step 3: bigger and clearer.
+  function viewCrop(slot) { return enhance(scaleTo(nativeCrop(slot), VIEW_SIDE, VIEW_UP), 2); }
   function paintSlots() {
     var box = $('slots');
     box.innerHTML = '';
@@ -636,7 +753,8 @@ button { font: inherit; }
       img.src = url;
     });
   }
-  // Gives { side: { read, save } } (data URLs): read = smaller, for the AI; save = for Drive.
+  // Gives { side: { read, zoom, save } } (data URLs): read = the whole card, bigger and sharper, for the AI; zoom = the upper and the lower part of a front (the AI reads them too, and the two readings are compared);
+  // save = for Drive. A small card (a photo that was sent by WhatsApp) is zoomed up to 6 times: the AI sees the small letters and digits.
   function cropsFor(slots) {
     var out = {}, groups = {};
     slots.forEach(function (s) { (groups[s.photo] = groups[s.photo] || []).push(s); });
@@ -645,10 +763,13 @@ button { font: inherit; }
       chain = chain.then(function () { return loadFull(S.photos[+k]); }).then(function (full) {
         groups[k].forEach(function (s) {
           var front = /_front$/.test(s.side);
-          out[s.side] = {
-            read: renderCrop(s, front ? READ_FRONT : READ_BACK, full || undefined).toDataURL('image/jpeg', front ? 0.82 : 0.7),
-            save: renderCrop(s, SAVE_SIDE, full || undefined).toDataURL('image/jpeg', 0.85)
-          };
+          var base = nativeCrop(s, full || undefined);
+          var o = { save: toUrl(scaleTo(base, SAVE_SIDE, 1), 0.85) };
+          if (DOC_OF[s.side]) {
+            o.read = toUrl(enhance(scaleTo(base, front ? READ_FRONT : READ_BACK, MAX_UP, true), 2), front ? 0.85 : 0.8);
+            if (front) o.zoom = [band(base, 0, 0.56), band(base, 0.44, 1)];
+          }
+          out[s.side] = o;
         });
         if (full) { full.width = 1; full.height = 1; }
       });
@@ -658,7 +779,7 @@ button { font: inherit; }
   $('next2').onclick = function () {
     if (S.busy) return;
     say('e2', '');
-    busy('b2', true, 'Preparing the pictures...');
+    busy('b2', true, 'Making the pictures bigger and sharper...');
     var wait = S.slots.filter(function (s) { return s.ok && !s.found && !s.turned; }).map(turnOne);              // a picture that she drew and did not close with Done
     Promise.all(wait).then(function () {
       return cropsFor(S.slots.filter(function (s) { return s.ok; }));
@@ -669,21 +790,29 @@ button { font: inherit; }
         if (!c) return;
         s.data = c.save;
         var m = DOC_OF[s.side];
-        if (m) docs[m[0]][m[1]] = c.read;
+        if (m && c.read) {
+          docs[m[0]][m[1]] = c.read;
+          if (c.zoom) docs[m[0]].zoom = c.zoom;
+        }
       });
       busy('b2', true, 'Reading the documents...');
       return api('read', { id: docs.id, dl: docs.dl, vl: docs.vl, phone: $('phone').value });
+    }).then(function (r) {
+      return Promise.resolve(S.areaTask).then(function () { return r; });
     }).then(function (r) {
       busy('b2', false);
       S.read = r;
       S.fields = Object.assign({}, r.fields);
       S.orig = Object.assign({}, r.fields);
       S.edited = {};
+      S.seen = {};
       S.fields.phone = phoneOf($('phone').value);
       S.orig.phone = S.fields.phone;
+      S.fields.area = S.area;
+      S.orig.area = S.area;
       S.rid = '';
-      paintReview();
       show('s3');
+      paintReview();
     }).catch(function (err) {
       busy('b2', false);
       failed(err, 'e2');
@@ -717,13 +846,22 @@ button { font: inherit; }
   }
   var DOC_FIELDS = { id: ['national_id'], dl: ['name', 'dl_issue', 'dl_expiry'], vl: ['plate', 'vin', 'compliance'] };
   var DOC_TEXT = { id: 'ID', dl: 'DL', vl: 'VL' };
+  var UNSURE = { name: 'Not sure: name', national_id: 'Not sure: National ID', dl_issue: 'Not sure: DL dates', dl_expiry: 'Not sure: DL dates', plate: 'Not sure: plate', vin: 'Not sure: VIN', compliance: 'Not sure: compliance' };
+  // The fields where two readings of the card were different and she did not look yet (she looks = she touches the field and leaves it).
+  function stillUnsure() {
+    var out = {}, us = (S.read && S.read.unsure) || {};
+    Object.keys(us).forEach(function (k) { if (us[k] && !S.edited[k] && !S.seen[k]) out[k] = true; });
+    return out;
+  }
   function check() {
     var f = S.fields, bad = {}, edited = S.edited, r = S.read || {};
     var unread = {};
-    Object.keys(DOC_FIELDS).forEach(function (d) { if ((r.unclear || {})[d]) DOC_FIELDS[d].forEach(function (x) { if (!edited[x]) unread[x] = true; }); });
-    function add(field, reason) { if (unread[field] && !/^(Unclear|Already)/.test(reason)) return; if (!bad[field]) bad[field] = reason; }
+    Object.keys(DOC_FIELDS).forEach(function (d) { if ((r.unclear || {})[d] || (r.failed || {})[d]) DOC_FIELDS[d].forEach(function (x) { if (!edited[x]) unread[x] = true; }); });
+    function add(field, reason) { if (unread[field] && !/^(Unclear|Not read|Already)/.test(reason)) return; if (!bad[field]) bad[field] = reason; }
     var today = S.info.today;
     if (!/^01[0-9]{9}$/.test(f.phone || '')) add('phone', 'Bad phone');
+    if (!String(f.area || '').trim()) add('area', 'No area');
+    else if (hasArabic(f.area)) add('area', 'Area not in English');
     if (!String(f.name || '').trim()) add('name', 'No name');
     var id = digits(f.national_id);
     if (!birthKey(id)) add('national_id', 'Bad National ID');
@@ -740,7 +878,12 @@ button { font: inherit; }
     if (!String(f.plate || '').trim()) add('plate', 'Bad plate');
     if (!/^[A-Z0-9]{5,25}$/.test(String(f.vin || '').toUpperCase().replace(/[^A-Z0-9]/g, ''))) add('vin', 'Bad VIN');
     if (f.compliance !== 'COMMERCIAL' && f.compliance !== 'NON-COMMERCIAL') add('compliance', 'Bad compliance');
-    Object.keys(DOC_FIELDS).forEach(function (d) { if ((r.unclear || {})[d]) DOC_FIELDS[d].forEach(function (x) { if (!edited[x]) add(x, 'Unclear photo: ' + DOC_TEXT[d]); }); });
+    var us = stillUnsure();
+    Object.keys(us).forEach(function (k) { if (!bad[k]) add(k, UNSURE[k]); });
+    Object.keys(DOC_FIELDS).forEach(function (d) {
+      if (!(r.unclear || {})[d] && !(r.failed || {})[d]) return;
+      DOC_FIELDS[d].forEach(function (x) { if (!edited[x]) add(x, ((r.failed || {})[d] ? 'Not read: ' : 'Unclear photo: ') + DOC_TEXT[d]); });
+    });
     // what the server found about the old drivers stays until the girl changes that field
     var iss = r.issues || {};
     ['national_id', 'phone'].forEach(function (x) { if (!edited[x] && /^Already exists/.test(iss[x] || '')) add(x, iss[x]); });
@@ -754,7 +897,7 @@ button { font: inherit; }
     { doc: 'vl', title: 'Vehicle License', fields: [['plate', 'Vehicle plate', 'text'], ['vin', 'Chassis number (VIN)', 'text'], ['compliance', 'Compliance', 'select']] }
   ];
   function slotHas(side) { return S.slots.some(function (x) { return x.side === side && x.ok; }); }
-  function slotData(side) { var s = S.slots.filter(function (x) { return x.side === side && x.ok; })[0]; return s ? renderCrop(s, 700) : null; }
+  function slotData(side) { var s = S.slots.filter(function (x) { return x.side === side && x.ok; })[0]; return s ? viewCrop(s) : null; }
   function paintReview() {
     var box = $('docs');
     box.innerHTML = '';
@@ -763,6 +906,7 @@ button { font: inherit; }
     var face = slotData('driver_photo');
     if (face) { var fw = el('div', 'dimg small'); fw.appendChild(face); drv.appendChild(fw); }
     drv.appendChild(fieldRow('phone', 'Phone', 'tel'));
+    drv.appendChild(fieldRow('area', 'Area (in English)', 'text'));
     box.appendChild(drv);
     GROUPS.forEach(function (g) {
       var card = el('div', 'card');
@@ -783,14 +927,18 @@ button { font: inherit; }
         g.fields.forEach(function (f) {
           var b = boxes[f[0]];
           if (!nums[f[0]] || b.image !== p) return;
-          var m = el('div', 'mark');
-          m.id = 'm_' + f[0];
-          m.style.top = (b.box[0] / 10) + '%';
-          m.style.left = (b.box[1] / 10) + '%';
-          m.style.height = ((b.box[2] - b.box[0]) / 10) + '%';
-          m.style.width = ((b.box[3] - b.box[1]) / 10) + '%';
-          m.appendChild(el('b', '', String(nums[f[0]])));
-          w.appendChild(m);
+          var a = el('div', 'arw');                                   // an arrow beside the value: its place is worked out in placeArrows (it needs the width of the picture)
+          a.id = 'm_' + f[0];
+          a.dataset.box = JSON.stringify(b.box);
+          a.appendChild(el('b', '', String(nums[f[0]])));
+          a.appendChild(el('i'));
+          w.appendChild(a);
+          var u = el('div', 'und');                                   // the line under the value (it shows when she touches the field)
+          u.id = 'u_' + f[0];
+          u.style.left = (b.box[1] / 10) + '%';
+          u.style.width = ((b.box[3] - b.box[1]) / 10) + '%';
+          u.style.top = (b.box[2] / 10) + '%';
+          w.appendChild(u);
         });
         imgs.appendChild(w);
       });
@@ -800,8 +948,8 @@ button { font: inherit; }
         if (nums[f[0]]) {
           row.firstChild.insertBefore(el('span', 'num', String(nums[f[0]])), row.firstChild.firstChild);
           var inp = row.querySelector('input,select');
-          inp.addEventListener('focus', function () { var m = $('m_' + f[0]); if (m) m.classList.add('on'); });
-          inp.addEventListener('blur', function () { var m = $('m_' + f[0]); if (m) m.classList.remove('on'); });
+          inp.addEventListener('focus', function () { var m = $('m_' + f[0]), u = $('u_' + f[0]); if (m) m.classList.add('on'); if (u) u.classList.add('on'); });
+          inp.addEventListener('blur', function () { var m = $('m_' + f[0]), u = $('u_' + f[0]); if (m) m.classList.remove('on'); if (u) u.classList.remove('on'); });
         }
         card.appendChild(row);
       });
@@ -817,7 +965,26 @@ button { font: inherit; }
       box.appendChild(card);
     });
     refresh();
+    placeArrows();
   }
+  // Each arrow goes beside its value, where there is room: on the left (it points right), else on the right, else above (it points down), else below.
+  function placeArrows() {
+    var list = document.querySelectorAll('.arw');
+    for (var i = 0; i < list.length; i++) {
+      var a = list[i], wrap = a.parentNode, W = wrap.clientWidth || 300, H = wrap.clientHeight || 200;
+      var b = JSON.parse(a.dataset.box);
+      var needX = 46 / W * 1000 + 6, needY = 40 / H * 1000 + 6;
+      var side = b[1] >= needX ? 'l' : (1000 - b[3] >= needX ? 'r' : (b[0] >= needY ? 't' : (1000 - b[2] >= needY ? 'b' : 'l')));
+      var on = a.classList.contains('on');
+      a.className = 'arw ' + side + (on ? ' on' : '');
+      var cx = (b[1] + b[3]) / 2, cy = (b[0] + b[2]) / 2;
+      if (side === 'l') { a.style.left = (b[1] / 10) + '%'; a.style.top = (cy / 10) + '%'; }
+      else if (side === 'r') { a.style.left = (b[3] / 10) + '%'; a.style.top = (cy / 10) + '%'; }
+      else if (side === 't') { a.style.left = (cx / 10) + '%'; a.style.top = (b[0] / 10) + '%'; }
+      else { a.style.left = (cx / 10) + '%'; a.style.top = (b[2] / 10) + '%'; }
+    }
+  }
+  window.addEventListener('resize', function () { if (S.step === 's3') placeArrows(); });
   function fieldRow(key, label, type) {
     var wrap = el('div', 'f');
     wrap.id = 'f_' + key;
@@ -837,6 +1004,7 @@ button { font: inherit; }
       if (key === 'national_id') { inp.inputMode = 'numeric'; inp.maxLength = 30; }
       if (key === 'phone') { inp.inputMode = 'numeric'; inp.maxLength = 20; }
       if (key === 'name') inp.dir = 'auto';
+      if (key === 'area') inp.dir = 'ltr';
       inp.autocomplete = 'off';
     }
     inp.id = 'i_' + key;
@@ -851,6 +1019,7 @@ button { font: inherit; }
       refresh();
     };
     inp.addEventListener(type === 'select' ? 'change' : 'input', onchange);
+    inp.addEventListener('blur', function () { if (S.read && S.read.unsure && S.read.unsure[key] && !S.seen[key]) { S.seen[key] = true; refresh(); } });      // she looked at the card and at this field
     wrap.appendChild(inp);
     var rs = el('div', 'reason');
     rs.id = 'r_' + key;
@@ -860,7 +1029,7 @@ button { font: inherit; }
   function refresh() {
     var bad = check();
     var reasons = [];
-    ['phone', 'national_id', 'name', 'dl_issue', 'dl_expiry', 'plate', 'vin', 'compliance'].forEach(function (k) {
+    ['phone', 'area', 'national_id', 'name', 'dl_issue', 'dl_expiry', 'plate', 'vin', 'compliance'].forEach(function (k) {
       var w = $('f_' + k);
       if (!w) return;
       w.className = 'f' + (bad[k] ? ' bad' : (S.edited[k] ? ' hand' : ''));
@@ -875,6 +1044,13 @@ button { font: inherit; }
     var sum = $('sum');
     if (u.length) { sum.className = 'sum warn'; sum.textContent = 'Red = a problem: ' + u.join('; ') + '. Look at the pictures and fix what you can. You can still save: the manager will see the problem.'; }
     else { sum.className = 'sum ok'; sum.textContent = 'All good. Yellow = something you changed.'; }
+    if (u.some(function (x) { return /^Not sure/.test(x); })) sum.textContent += ' Not sure = the two readings of the card were different: look at the arrow on the card, then touch the field.';
+    var rn = $('readnote'), fl = (S.read && S.read.failed) || {};
+    var fn = Object.keys(fl).filter(function (d) { return DOC_FIELDS[d] && DOC_FIELDS[d].some(function (x) { return !S.edited[x]; }); });      // a document that she typed by hand is not told again
+    if (rn) {
+      rn.style.display = fn.length ? 'block' : 'none';
+      rn.textContent = fn.length ? fn.map(function (d) { return DOC_TEXT[d]; }).join(' and ') + ' could not be read: ' + (typeof fl[fn[0]] === 'string' ? fl[fn[0]] : 'No answer.') + ' Type its data by hand, or tap Back and then Read documents again.' : '';
+    }
     var tries = S.read && S.read.tries;
     if (tries && Object.keys(tries).some(function (k) { return tries[k] > 1; })) sum.textContent += ' (Some documents were read again.)';
   }
@@ -885,9 +1061,9 @@ button { font: inherit; }
     S.slots.forEach(function (s) { if (!s.ok) return; images[s.side] = (s.data || renderCrop(s, SAVE_SIDE).toDataURL('image/jpeg', 0.85)).replace(/^data:image\/jpeg;base64,/, ''); });
     var f = S.fields;
     var args = {
-      moderator: $('mod').value, phone: f.phone, area: $('area').value, vehicle: S.vehicle, day0: $('day').value,
+      moderator: $('mod').value, phone: f.phone, area: f.area, vehicle: S.vehicle, day0: $('day').value,
       fields: { name: f.name, national_id: f.national_id, dl_issue: f.dl_issue, dl_expiry: f.dl_expiry, plate: f.plate, vin: f.vin, compliance: f.compliance },
-      edited: S.edited, idCard: S.read.idCard, idDl: S.read.idDl, unclear: S.read.unclear || {}, images: images
+      edited: S.edited, idCard: S.read.idCard, idDl: S.read.idDl, unclear: S.read.unclear || {}, failed: S.read.failed || {}, unsure: stillUnsure(), images: images
     };
     if (!S.rid) S.rid = (window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'r' + Date.now() + Math.random().toString(36).slice(2));
     say('e3', '');
@@ -907,7 +1083,7 @@ button { font: inherit; }
 
   // ---------- again ----------
   $('again').onclick = function () {
-    S.photos = []; S.slots = []; S.sig = ''; S.read = null; S.fields = {}; S.orig = {}; S.edited = {}; S.rid = ''; S.vehicle = ''; S.open = -1;
+    S.photos = []; S.slots = []; S.sig = ''; S.read = null; S.fields = {}; S.orig = {}; S.edited = {}; S.seen = {}; S.area = ''; S.areaIn = ''; S.areaTask = null; S.rid = ''; S.vehicle = ''; S.open = -1;
     $('phone').value = ''; $('area').value = '';
     paintThumbs(); paintVeh();
     say('e1', ''); say('e2', ''); say('e3', '');
