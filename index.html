@@ -183,7 +183,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
 <body>
 <header>
   <div class="hrow">
-    <div class="brand"><b id="office"></b> <span>Intake</span> <small id="ver">v78</small></div>
+    <div class="brand"><b id="office"></b> <span>Intake</span> <small id="ver">v79</small></div>
     <div class="hbtns"><button type="button" class="hb" id="theme" aria-label="Day or night"></button><button type="button" class="hb" id="out" hidden>Sign out</button></div>
   </div>
   <div class="hello" id="hello" hidden></div>
@@ -522,6 +522,8 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     'All done. Great work.': '\u062e\u0644\u0651\u0635\u062a\u064a \u0643\u0644 \u0627\u0644\u0645\u0646\u062f\u0648\u0628\u064a\u0646. \u0634\u063a\u0644 \u0645\u0645\u062a\u0627\u0632!',
     'NEW': '\u062c\u062f\u064a\u062f',
     'Call': '\u0627\u062a\u0635\u0627\u0644',
+    'WhatsApp': '\u0648\u0627\u062a\u0633\u0627\u0628',
+    'WhatsApp did not open. Press WhatsApp again.': '\u0648\u0627\u062a\u0633\u0627\u0628 \u0645\u0627\u062a\u0641\u062a\u062d\u0634. \u0627\u0636\u063a\u0637\u064a \u00ab\u0648\u0627\u062a\u0633\u0627\u0628\u00bb \u062a\u0627\u0646\u064a.',
     'Calling...': '\u062c\u0627\u0631\u064a \u0627\u0644\u0627\u062a\u0635\u0627\u0644...',
     'Add driver': '\u0633\u062c\u0651\u0644\u064a \u0628\u064a\u0627\u0646\u0627\u062a\u0647',
     'Call summary': '\u0645\u0644\u062e\u0635 \u0627\u0644\u0645\u0643\u0627\u0644\u0645\u0629',
@@ -1606,9 +1608,16 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
   var LEADS_URL = String(LEADS_API_URL || CFG.leadsUrl || '').trim();
   var L = { on: !!LEADS_URL && !/^PASTE/.test(LEADS_URL), pin: '', agent: '', goal: 0, done: 0, leads: [], cards: {}, open: {}, pending: null, busyList: false, shared: null, wantWho: false, last: '', vapid: '', called: {}, tries: {}, logging: false };
   var LEADS_EVERY = CFG.leadsEvery || 30000;
-  var CALL_MIN_MS = CFG.callMinMs || 5000;      // a call shorter than this did not happen (the phone only opened and closed)
+  var CALL_MIN_MS = CFG.callMinMs || 8000;      // a call shorter than this did not happen (the phone only opened and closed). In Egypt the first ring comes after 3 to 5 seconds.
 
   S.dial = function (number) { window.location.href = 'tel:' + number; };      // opens the phone dialer (a test can replace it)
+  S.chat = function (number) { window.location.href = 'https://wa.me/' + waNumber(number); };      // opens WhatsApp on the number (a test can replace it)
+  function waNumber(p) {                                  // 01012345678 -> 201012345678
+    var d = digits(p);
+    if (d.indexOf('00') === 0) return d.slice(2);
+    if (d.indexOf('0') === 0) return '20' + d.slice(1);
+    return d;
+  }
   function lapi(body) {
     var ctl = window.AbortController ? new AbortController() : null;
     var late = false;
@@ -1821,8 +1830,9 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     var pr = el('div', 'lpics'); pr.appendChild(pc); c.appendChild(pr);
     var bt = el('div', 'lbtns');
     var bc = el('button', 'btn fill', 'Call'); bc.type = 'button';
+    var bw = el('button', 'btn', 'WhatsApp'); bw.type = 'button'; bw.hidden = true;      // shows after the first real call
     var ba = el('button', 'btn', 'Add driver'); ba.type = 'button';
-    bt.appendChild(bc); bt.appendChild(ba);
+    bt.appendChild(bc); bt.appendChild(bw); bt.appendChild(ba);
     c.appendChild(bt);
     var hint = el('p', 'note lhint'); hint.hidden = true;
     c.appendChild(hint);
@@ -1840,16 +1850,22 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     res.appendChild(pp);
     var er = el('p', 'note err'); res.appendChild(er);
     c.appendChild(res);
-    c.r = { name: nm, isNew: nw, time: tm, phone: ph, msg: ms, pics: pc, call: bc, add: ba, hint: hint, res: res, ta: ta, post: pp, err: er, btns: [bn, bp, bi].concat(pk), lead: ld };
+    c.r = { name: nm, isNew: nw, time: tm, phone: ph, msg: ms, pics: pc, call: bc, wa: bw, add: ba, hint: hint, res: res, ta: ta, post: pp, err: er, btns: [bn, bp, bi].concat(pk), lead: ld };
     top.onclick = function () {
       var id = c.dataset.id;
       if (!isCalled(c)) { showHint(c, T('Call first, then write the result.')); return; }      // the result menu opens only after a real call
       L.open[id] = !L.open[id];
       applyOpen();
     };
+    bw.onclick = function () {
+      var lead = c.r.lead;
+      L.pending = { id: lead.id, t: Date.now(), via: 'wa' };
+      showHint(c, '');
+      S.chat(cleanPhone(lead.phone));
+    };
     bc.onclick = function () {
       var lead = c.r.lead;
-      L.pending = { id: lead.id, t: Date.now() };
+      L.pending = { id: lead.id, t: Date.now(), via: 'call' };
       showHint(c, '');
       bc.textContent = T('Calling...');
       setTimeout(function () { bc.textContent = T('Call'); }, 6000);
@@ -1877,6 +1893,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     c.classList.toggle('isnew', !!ld.isNew);
     r.res.hidden = !(L.open[c.dataset.id] && isCalled(c));
     r.call.className = isCalled(c) ? 'btn' : 'btn fill';
+    r.wa.hidden = !isCalled(c);
   }
   function applyOpen() {
     Object.keys(L.cards).forEach(function (key) { L.cards[key].r.res.hidden = !(L.open[key] && isCalled(L.cards[key])); });
@@ -1929,10 +1946,10 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
         if (c) { showHint(c, ''); fillCard(c, c.r.lead); }
       } else {
         L.tries[id] = (L.tries[id] || 0) + 1;
-        if (c) showHint(c, T('The call did not happen. Press Call again.'), true);
+        if (c) showHint(c, T(p.via === 'wa' ? 'WhatsApp did not open. Press WhatsApp again.' : 'The call did not happen. Press Call again.'), true);
       }
       applyOpen();
-      lapi({ action: 'call', pin: L.pin, id: p.id, startedAt: new Date(p.t).toISOString(), awayMs: away }).catch(function () { });
+      lapi({ action: 'call', pin: L.pin, id: p.id, startedAt: new Date(p.t).toISOString(), awayMs: away, via: p.via === 'wa' ? 'wa' : 'call' }).catch(function () { });
     }
     if (TAB === 'leads' && L.pin && $('lwho').hidden) leadsRefresh();
   });
@@ -1968,7 +1985,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     if (S.code) openForm(); else show('gate');
   }
   function addDriver(lead, c) {
-    if (!(+lead.photos > 0)) { startDriver(lead, []); return; }
+    if (!(+lead.photos > 0)) { startDriver(lead, []); try { $('file').click(); } catch (e) { } return; }      // no photos waiting: the photo picker opens at once (the photos are in her WhatsApp gallery)
     var b = c.r.add;
     b.disabled = true;
     b.textContent = T('Loading photos...');
