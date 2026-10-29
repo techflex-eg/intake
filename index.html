@@ -109,6 +109,7 @@ button { font: inherit; }
 .f input { margin: 0; }
 .f.bad input, .f.bad select { background: var(--bad-bg); border-color: var(--bad); }
 .f.hand input, .f.hand select { background: var(--hand-bg); border-color: #d4a400; }
+.f.info .reason { color: var(--muted); font-weight: 500; }
 .ro { padding: 12px; border-radius: 10px; background: var(--bg); border: 2px solid var(--line); min-height: 48px; }
 .ro.bad { background: var(--bad-bg); border-color: var(--bad); }
 .hint { font-size: 12px; color: var(--muted); margin-top: 3px; }
@@ -122,7 +123,7 @@ button { font: inherit; }
 </head>
 <body>
 <header>
-  <div class="brand">TechFlex <span>Intake</span> <small id="ver">v73</small></div>
+  <div class="brand">TechFlex <span>Intake</span> <small id="ver">v74</small></div>
   <div id="steps"><i></i><i></i><i></i></div>
 </header>
 
@@ -873,9 +874,10 @@ button { font: inherit; }
     if (!String(f.area || '').trim()) add('area', 'No area');
     else if (hasArabic(f.area)) add('area', 'Area not in English');
     if (!String(f.name || '').trim()) add('name', 'No name');
+    else if (r.nameGuess && !edited.name) add('name', 'Name written from the Arabic: check the spelling');
     var id = digits(f.national_id);
     if (!birthKey(id)) add('national_id', 'Bad National ID');
-    else if (r.idCard && r.idDl && r.idCard !== r.idDl && !edited.national_id) add('national_id', 'ID mismatch DL');
+    else if (r.idCard && r.idDl && r.idCard !== r.idDl && !edited.national_id && !r.idConfirmed) add('national_id', 'ID mismatch DL');
     var issue = dayKey(f.dl_issue), expiry = dayKey(f.dl_expiry), birth = birthKey(id), ok = true;
     if (!issue) { add('dl_issue', 'Bad DL dates'); ok = false; }
     if (!expiry) { add('dl_expiry', 'Bad DL dates'); ok = false; }
@@ -900,10 +902,17 @@ button { font: inherit; }
     return bad;
   }
 
+  // A quiet line under a field (it is not a problem): the license prints another National ID number. The ID card agrees with itself, so its number is used.
+  function infoLines() {
+    var r = S.read || {}, out = {};
+    if (r.idConfirmed && r.idCard && r.idDl && r.idCard !== r.idDl && !S.edited.national_id && digits(S.fields.national_id) === r.idCard) out.national_id = 'The license prints another number: ' + r.idDl + '. The ID card number is used.';
+    return out;
+  }
+
   // ---------- step 3 ----------
   var GROUPS = [
     { doc: 'id', title: 'National ID', fields: [['national_id', 'National ID', 'tel']] },
-    { doc: 'dl', title: 'Driving License', fields: [['name', 'DA Name (as on the license)', 'text'], ['dl_issue', 'DL issuance date (dd/mm/yyyy)', 'text'], ['dl_expiry', 'DL expiration date (dd/mm/yyyy)', 'text']] },
+    { doc: 'dl', title: 'Driving License', fields: [['name', 'DA Name (English, as on the license)', 'text'], ['dl_issue', 'DL issuance date (dd/mm/yyyy)', 'text'], ['dl_expiry', 'DL expiration date (dd/mm/yyyy)', 'text']] },
     { doc: 'vl', title: 'Vehicle License', fields: [['plate', 'Vehicle plate', 'text'], ['vin', 'Chassis number (VIN)', 'text'], ['compliance', 'Compliance', 'select']] }
   ];
   function slotHas(side) { return S.slots.some(function (x) { return x.side === side && x.ok; }); }
@@ -1037,13 +1046,13 @@ button { font: inherit; }
     return wrap;
   }
   function refresh() {
-    var bad = check();
+    var bad = check(), info = infoLines();
     var reasons = [];
     ['phone', 'area', 'national_id', 'name', 'dl_issue', 'dl_expiry', 'plate', 'vin', 'compliance'].forEach(function (k) {
       var w = $('f_' + k);
       if (!w) return;
-      w.className = 'f' + (bad[k] ? ' bad' : (S.edited[k] ? ' hand' : ''));
-      $('r_' + k).textContent = bad[k] || '';
+      w.className = 'f' + (bad[k] ? ' bad' : (S.edited[k] ? ' hand' : '')) + (!bad[k] && info[k] ? ' info' : '');
+      $('r_' + k).textContent = bad[k] || info[k] || '';
       if (bad[k]) reasons.push(bad[k]);
     });
     var dob = birthKey(digits(S.fields.national_id));
@@ -1081,7 +1090,7 @@ button { font: inherit; }
     var args = {
       moderator: $('mod').value, phone: f.phone, area: f.area, vehicle: S.vehicle, day0: $('day').value,
       fields: { name: f.name, national_id: f.national_id, dl_issue: f.dl_issue, dl_expiry: f.dl_expiry, plate: f.plate, vin: f.vin, compliance: f.compliance },
-      edited: S.edited, idCard: S.read.idCard, idDl: S.read.idDl, unclear: S.read.unclear || {}, failed: S.read.failed || {}, unsure: stillUnsure(), images: images
+      edited: S.edited, idCard: S.read.idCard, idDl: S.read.idDl, idConfirmed: !!S.read.idConfirmed, nameGuess: !!S.read.nameGuess, unclear: S.read.unclear || {}, failed: S.read.failed || {}, unsure: stillUnsure(), images: images
     };
     if (!S.rid) S.rid = (window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'r' + Date.now() + Math.random().toString(36).slice(2));
     say('e3', '');
