@@ -124,11 +124,46 @@ button { font: inherit; }
 .sum.once { background: var(--card); border: 1px solid var(--line); color: var(--ink); font-weight: 500; }
 .done { text-align: center; padding: 30px 10px; }
 .code { font-size: 44px; font-weight: 800; letter-spacing: 1px; color: var(--brand); margin: 10px 0; }
+/* leads */
+#tabs { display: flex; gap: 6px; margin-top: 8px; }
+#tabs button { flex: 1; min-height: 44px; border: 0; border-radius: 10px; font: inherit; font-weight: 700; color: #fff; background: rgba(255,255,255,.2); }
+#tabs button.on { background: #fff; color: var(--brand); }
+.pin { display: flex; gap: 10px; justify-content: center; margin: 14px 0 6px; }
+.pin input { width: 58px; min-height: 58px; text-align: center; font-size: 26px; font-weight: 700; padding: 0; }
+.bignum { font-size: 46px; font-weight: 800; line-height: 1; color: var(--brand); }
+.pbar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 8px; }
+.pbar i { display: block; height: 100%; width: 0; background: var(--good); transition: width .3s; }
+.lcard { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin-bottom: 10px; transition: opacity .3s, transform .3s; }
+.lcard.gone { opacity: 0; transform: translateX(24px); }
+.lcard.isnew { border-color: var(--brand); }
+.lhd { cursor: pointer; }
+.l1 { display: flex; align-items: center; gap: 6px; font-weight: 700; }
+.lname { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ltime { margin-left: auto; font-weight: 500; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.badge { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 99px; background: var(--brand); color: #fff; white-space: nowrap; }
+.badge.ph { background: #d6f3e4; color: #0d6b41; }
+.lphone { font-size: 15px; margin-top: 2px; }
+.lmsg { font-size: 14px; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lpics { margin-top: 6px; }
+.lbtns { display: flex; gap: 8px; margin-top: 10px; }
+.lbtns .btn { flex: 1; }
+.lres { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.lres label { margin-top: 0; }
+.lres textarea { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 2px solid var(--line); border-radius: 10px; padding: 10px; resize: vertical; }
+.lres .seg { margin-top: 8px; }
+.lres .seg button:disabled { opacity: .5; }
+.thumbs2 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+.thumbs2 .th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wbtn { display: block; width: 100%; text-align: left; min-height: 56px; padding: 8px 14px; margin-bottom: 8px; font: inherit; color: var(--ink); background: var(--card); border: 2px solid var(--line); border-radius: 12px; }
+.wbtn small { display: block; color: var(--muted); font-size: 13px; }
+.wbtn.last { border-color: var(--brand); background: var(--hand-bg); }
+.wbtn.other { border-style: dashed; text-align: center; font-weight: 700; color: var(--brand); }
 </style>
 </head>
 <body>
 <header>
-  <div class="brand"><b id="office"></b> <span>Intake</span> <small id="ver">v76</small></div>
+  <div class="brand"><b id="office"></b> <span>Intake</span> <small id="ver">v77</small></div>
+  <div id="tabs" hidden><button type="button" id="tabL" class="on">Leads</button><button type="button" id="tabD">New driver</button></div>
   <div id="steps"><i></i><i></i><i></i></div>
 </header>
 
@@ -147,6 +182,7 @@ button { font: inherit; }
   <!-- step 1: the details and the photos -->
   <section id="s1">
     <h2>New driver</h2>
+    <p class="note" id="fromlead" hidden style="margin:-6px 0 10px;font-weight:600"></p>
     <div class="card">
       <label for="mod">Moderator</label>
       <input id="mod" type="text" dir="auto" maxlength="60" autocomplete="off">
@@ -211,12 +247,44 @@ button { font: inherit; }
     </div>
     <div class="bar"><div class="in"><button class="btn fill" id="again">New driver</button></div></div>
   </section>
+  <!-- the leads (shown only when the address of the leads backend is set) -->
+  <section id="lv">
+    <div id="lgate" hidden>
+      <h2>Enter your code</h2>
+      <div class="card">
+        <div class="pin" id="lpin"><input type="password" inputmode="numeric" maxlength="4" autocomplete="off"><input type="password" inputmode="numeric" maxlength="4" autocomplete="off"><input type="password" inputmode="numeric" maxlength="4" autocomplete="off"><input type="password" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+        <p class="note err" id="lgerr" style="text-align:center"></p>
+      </div>
+      <div class="bar"><div class="in"><button class="btn fill" id="lstart" type="button">Start</button></div></div>
+    </div>
+    <div id="lmain" hidden>
+      <div class="card">
+        <div class="note" style="margin:0 0 6px">Done today</div>
+        <div class="bignum" id="ldone">0</div>
+        <div id="lgoalbox" hidden>
+          <div class="pbar"><i id="lgoalbar"></i></div>
+          <div class="note" id="lgoaltext" style="margin-top:4px"></div>
+        </div>
+      </div>
+      <button class="btn small" id="lnotify" type="button" hidden style="margin-bottom:12px">Turn on notifications</button>
+      <p class="note err" id="lerr"></p>
+      <div id="llist"></div>
+      <p class="note" id="lempty" hidden style="text-align:center;font-weight:600;padding:24px 0">All done. Great work.</p>
+    </div>
+    <div id="lwho" hidden>
+      <h2>Who are these photos for?</h2>
+      <div class="thumbs2" id="wthumbs"></div>
+      <div id="wleads"></div>
+      <button class="wbtn other" id="wother" type="button">Other driver (not in my list)</button>
+    </div>
+  </section>
 </main>
 
 <script src="config.js"></script>
 <script>
 (function () {
   'use strict';
+  var LEADS_API_URL = "";                  // the address of the leads backend (a Google Apps Script web app). Empty = no Leads screen. It can also be set as leadsUrl in config.js.
   var CFG = window.INTAKE_CONFIG || {};
   var SIDES = ['id_front', 'id_back', 'dl_front', 'dl_back', 'vl_front', 'vl_back', 'driver_photo'];
   var DOC_OF = { id_front: ['id', 'front'], id_back: ['id', 'back'], dl_front: ['dl', 'front'], dl_back: ['dl', 'back'], vl_front: ['vl', 'front'], vl_back: ['vl', 'back'] };      // the driver photo is not a document: it is not read
@@ -234,6 +302,7 @@ button { font: inherit; }
   var WAIT = Object.assign({ locate: 150000, orient: 60000, read: 240000, save: 150000, ping: 30000 }, CFG.waits || {});      // how long the page waits for each call (ms)
 
   var pidn = 0;
+  var TAB = 'driver';                       // the tab that shows: driver (the New driver flow) or leads
   var S = { code: '', info: null, photos: [], slots: [], vehicle: '', hours: 0, shift: '', step: 'gate', open: -1, read: null, fields: {}, orig: {}, edited: {}, seen: {}, area: '', areaIn: '', areaDone: '', areaHow: '', areaBusy: '', rid: '', busy: false };
 
   function $(id) { return document.getElementById(id); }
@@ -252,6 +321,7 @@ button { font: inherit; }
   // ---------- the steps ----------
   function show(id) {
     S.step = id;
+    if (TAB === 'leads') return;               // the Leads tab is open: the step waits behind it
     ['gate', 's1', 's2', 's3', 's4'].forEach(function (x) { $(x).classList.toggle('show', x === id); });
     var n = { gate: 0, s1: 1, s2: 2, s3: 3, s4: 3 }[id];
     var dots = $('steps').children;
@@ -1196,6 +1266,7 @@ button { font: inherit; }
       $('dcheck').className = 'note' + (r.check ? ' err' : '');
       $('dcheck').textContent = r.check ? 'Saved with a problem: ' + r.check + '. The manager will see it.' : 'No problems found.';
       show('s4');
+      leadAdded();
     }).catch(function (err) {
       busy('b3', false);
       failed(err, 'e3');
@@ -1204,14 +1275,430 @@ button { font: inherit; }
 
   // ---------- again ----------
   $('again').onclick = function () {
-    S.photos = []; S.slots = []; S.sig = ''; S.read = null; S.fields = {}; S.orig = {}; S.edited = {}; S.seen = {}; S.area = ''; S.areaIn = ''; S.areaDone = ''; S.areaHow = ''; S.areaBusy = ''; S.rid = ''; S.vehicle = ''; S.hours = 0; S.shift = ''; S.open = -1;
-    $('phone').value = ''; $('area').value = '';
-    paintThumbs(); paintVeh(); paintWork();
-    say('e1', ''); say('e2', ''); say('e3', '');
+    resetDriver();
     openForm();
   };
 
+
+  // ================================================================
+  // ---------- Leads: the screen of the WhatsApp leads of the girl ----------
+  // Everything here works only when LEADS_API_URL (the top of this script) or leadsUrl (config.js) has the address of the leads backend.
+  // When it is empty nothing of this shows and the page works as it did before.
+  var LEADS_URL = String(LEADS_API_URL || CFG.leadsUrl || '').trim();
+  var L = { on: !!LEADS_URL && !/^PASTE/.test(LEADS_URL), pin: '', agent: '', goal: 0, done: 0, leads: [], cards: {}, open: {}, pending: null, busyList: false, shared: null, wantWho: false, last: '', vapid: '' };
+  var LEADS_EVERY = CFG.leadsEvery || 30000;
+
+  S.dial = function (number) { window.location.href = 'tel:' + number; };      // opens the phone dialer (a test can replace it)
+  function lapi(body) {
+    var ctl = window.AbortController ? new AbortController() : null;
+    var late = false;
+    var timer = ctl ? setTimeout(function () { late = true; ctl.abort(); }, 45000) : null;
+    return fetch(LEADS_URL, { method: 'POST', body: JSON.stringify(body), signal: ctl ? ctl.signal : undefined })
+      .then(function (res) { return res.json(); })
+      .then(function (j) {
+        clearTimeout(timer);
+        if (!j || !j.ok) { var e = new Error((j && j.error) || 'Something went wrong.'); e.bad = true; throw e; }
+        return j;
+      }, function (err) {
+        clearTimeout(timer);
+        if (late) throw new Error('It is taking too long. Check the internet and try again.');
+        throw new Error('No connection. Check the internet and try again.');
+      });
+  }
+
+  // ---- the tabs ----
+  function setTab(t) {
+    TAB = t;
+    $('lv').classList.toggle('show', t === 'leads');
+    $('tabL').className = t === 'leads' ? 'on' : '';
+    $('tabD').className = t === 'driver' ? 'on' : '';
+    $('steps').hidden = t === 'leads';
+    if (t === 'leads') {
+      ['gate', 's1', 's2', 's3', 's4'].forEach(function (x) { $(x).classList.remove('show'); });
+      leadsEnter();
+      window.scrollTo(0, 0);
+    } else {
+      show(S.step);
+    }
+  }
+  function tabCount() { $('tabL').textContent = 'Leads' + (L.pin ? ' (' + L.leads.length + ')' : ''); }
+  $('tabL').onclick = function () { if (TAB !== 'leads') setTab('leads'); };
+  $('tabD').onclick = function () { if (TAB !== 'driver') setTab('driver'); };
+
+  // ---- the code ----
+  function pinBoxes() { return Array.prototype.slice.call(document.querySelectorAll('#lpin input')); }
+  pinBoxes().forEach(function (inp, i, all) {
+    inp.addEventListener('input', function () {
+      var d = digits(inp.value);
+      if (d.length > 1) { for (var k = 0; k < all.length; k++) all[k].value = d.charAt(k); all[Math.min(d.length, 4) - 1].focus(); return; }
+      inp.value = d;
+      if (d && i < all.length - 1) all[i + 1].focus();
+    });
+    inp.addEventListener('focus', function () { try { inp.select(); } catch (e) { } });
+    inp.addEventListener('keydown', function (e) {
+      if (e.key === 'Backspace' && !inp.value && i > 0) { all[i - 1].value = ''; all[i - 1].focus(); }
+    });
+  });
+  $('lstart').onclick = function () {
+    var pin = pinBoxes().map(function (b) { return digits(b.value); }).join('');
+    if (pin.length !== 4) { say('lgerr', 'Enter your code'); return; }
+    say('lgerr', '');
+    $('lstart').disabled = true;
+    lapi({ action: 'login', pin: pin }).then(function (j) {
+      $('lstart').disabled = false;
+      L.pin = pin;
+      L.agent = String((j.agent && j.agent.name) || '');
+      L.goal = +j.goal || 0;
+      L.vapid = String(j.vapidPublicKey || '');
+      store('leadsPin', L.pin); store('leadsAgent', L.agent); store('leadsVapid', L.vapid);
+      pinBoxes().forEach(function (b) { b.value = ''; });
+      leadsEnter();
+    }).catch(function (err) {
+      $('lstart').disabled = false;
+      say('lgerr', err.bad ? 'Wrong code' : err.message);
+      if (err.bad) { var bx = pinBoxes(); bx.forEach(function (b) { b.value = ''; }); bx[0].focus(); }
+    });
+  };
+  function leadsLogout() {
+    L.pin = ''; L.leads = []; store('leadsPin', ''); store('leadsAgent', '');
+    tabCount();
+    leadsEnter();
+  }
+
+  // ---- what shows in the Leads tab ----
+  function leadsPane(name) {
+    ['lgate', 'lmain', 'lwho'].forEach(function (x) { $(x).hidden = x !== name; });
+    window.scrollTo(0, 0);
+  }
+  function leadsEnter() {
+    if (!L.pin) { leadsPane('lgate'); return; }
+    if (L.wantWho) { openWho(); return; }
+    leadsPane('lmain');
+    notifyInit();
+    leadsRefresh();
+  }
+
+  // ---- the list ----
+  function leadsRefresh() {
+    if (!L.on || !L.pin || L.busyList) return Promise.resolve();
+    L.busyList = true;
+    return lapi({ action: 'list', pin: L.pin }).then(function (j) {
+      L.busyList = false;
+      var c = j.counters || {};
+      L.done = +c.done || 0;
+      L.goal = +c.goal || 0;
+      L.leads = Array.isArray(j.leads) ? j.leads : [];
+      say('lerr', '');
+      renderLeads();
+    }).catch(function (err) {
+      L.busyList = false;
+      if (err.bad && /code|pin/i.test(err.message)) { leadsLogout(); say('lgerr', 'Wrong code'); return; }
+      say('lerr', err.message);
+    });
+  }
+  function cleanPhone(p) { return String(p || '').replace(/[^0-9+]/g, ''); }
+  function renderProgress() {
+    $('ldone').textContent = String(L.done);
+    $('lgoalbox').hidden = !(L.goal > 0);
+    if (L.goal > 0) {
+      $('lgoaltext').textContent = L.done + ' of ' + L.goal;
+      $('lgoalbar').style.width = Math.min(100, Math.round(L.done * 100 / L.goal)) + '%';
+    }
+  }
+  function renderLeads() {
+    renderProgress();
+    var box = $('llist'), keep = {};
+    L.leads.forEach(function (ld, i) {
+      var key = String(ld.id);
+      keep[key] = true;
+      var c = L.cards[key];
+      if (!c) { c = makeCard(ld); L.cards[key] = c; }
+      fillCard(c, ld);
+      if (box.children[i] !== c) box.insertBefore(c, box.children[i] || null);
+    });
+    Object.keys(L.cards).forEach(function (key) {
+      if (keep[key]) return;
+      if (L.cards[key].parentNode) L.cards[key].parentNode.removeChild(L.cards[key]);
+      delete L.cards[key];
+    });
+    $('lempty').hidden = L.leads.length > 0;
+    tabCount();
+  }
+  function makeCard(ld) {
+    var c = el('div', 'lcard');
+    c.dataset.id = String(ld.id);
+    var top = el('div', 'lhd');
+    var l1 = el('div', 'l1');
+    var nm = el('span', 'lname'); nm.dir = 'auto';
+    var nw = el('span', 'badge', 'NEW');
+    var tm = el('span', 'ltime');
+    l1.appendChild(nm); l1.appendChild(nw); l1.appendChild(tm);
+    var ph = el('div', 'lphone'); ph.dir = 'ltr';
+    var ms = el('div', 'lmsg'); ms.dir = 'auto';
+    var pc = el('span', 'badge ph');
+    top.appendChild(l1); top.appendChild(ph); top.appendChild(ms);
+    c.appendChild(top);
+    var pr = el('div', 'lpics'); pr.appendChild(pc); c.appendChild(pr);
+    var bt = el('div', 'lbtns');
+    var bc = el('button', 'btn fill', 'Call'); bc.type = 'button';
+    var ba = el('button', 'btn', 'Add driver'); ba.type = 'button';
+    bt.appendChild(bc); bt.appendChild(ba);
+    c.appendChild(bt);
+    var res = el('div', 'lres'); res.hidden = true;
+    res.appendChild(el('label', '', 'Call summary'));
+    var ta = el('textarea', ''); ta.rows = 3; ta.dir = 'auto'; ta.maxLength = 1000;
+    res.appendChild(ta);
+    var rb = el('div', 'seg tall');
+    var bn = el('button', '', 'No Answer'), bp = el('button', '', 'Postponed'), bi = el('button', '', 'Not Interested');
+    [bn, bp, bi].forEach(function (b) { b.type = 'button'; rb.appendChild(b); });
+    res.appendChild(rb);
+    var pp = el('div', 'seg'); pp.hidden = true;
+    var pk = [['tomorrow', 'Tomorrow'], ['2days', 'In 2 days'], ['nextweek', 'Next week']].map(function (x) { var b = el('button', '', x[1]); b.type = 'button'; b.dataset.v = x[0]; pp.appendChild(b); return b; });
+    res.appendChild(pp);
+    var er = el('p', 'note err'); res.appendChild(er);
+    c.appendChild(res);
+    c.r = { name: nm, isNew: nw, time: tm, phone: ph, msg: ms, pics: pc, call: bc, add: ba, res: res, ta: ta, post: pp, err: er, btns: [bn, bp, bi].concat(pk), lead: ld };
+    top.onclick = function () { L.open[c.dataset.id] = !L.open[c.dataset.id]; applyOpen(); };
+    bc.onclick = function () {
+      var lead = c.r.lead;
+      L.pending = { id: lead.id, t: Date.now() };
+      S.dial(cleanPhone(lead.phone));
+    };
+    ba.onclick = function () { addDriver(c.r.lead, c); };
+    bn.onclick = function () { sendResult(c, 'No Answer', ''); };
+    bi.onclick = function () { sendResult(c, 'Not Interested', ''); };
+    bp.onclick = function () { pp.hidden = !pp.hidden; };
+    pk.forEach(function (b) { b.onclick = function () { sendResult(c, 'Postponed', b.dataset.v); }; });
+    return c;
+  }
+  function fillCard(c, ld) {
+    var r = c.r;
+    r.lead = ld;
+    r.name.textContent = String(ld.name || ld.phone || '');
+    r.isNew.hidden = !ld.isNew;
+    r.time.textContent = String(ld.time || '');
+    r.phone.textContent = String(ld.phone || '');
+    r.msg.textContent = String(ld.lastMessage || '');
+    r.msg.hidden = !ld.lastMessage;
+    var n = +ld.photos || 0;
+    r.pics.textContent = n + (n === 1 ? ' photo' : ' photos');
+    r.pics.parentNode.hidden = !(n > 0);
+    c.classList.toggle('isnew', !!ld.isNew);
+    r.res.hidden = !L.open[c.dataset.id];
+  }
+  function applyOpen() {
+    Object.keys(L.cards).forEach(function (key) { L.cards[key].r.res.hidden = !L.open[key]; });
+  }
+
+  // ---- a result of a call ----
+  function sendResult(c, status, postpone) {
+    var r = c.r, lead = r.lead;
+    if (c.sending) return;
+    c.sending = true;
+    r.btns.forEach(function (b) { b.disabled = true; });
+    r.err.textContent = '';
+    var body = { action: 'update', pin: L.pin, id: lead.id, status: status, comment: r.ta.value.trim() };
+    if (status === 'Postponed') body.postpone = postpone;
+    lapi(body).then(function () {
+      L.done += 1;
+      renderProgress();
+      c.classList.add('gone');
+      setTimeout(function () {
+        var key = c.dataset.id;
+        if (c.parentNode) c.parentNode.removeChild(c);
+        delete L.cards[key];
+        L.leads = L.leads.filter(function (x) { return String(x.id) !== key; });
+        $('lempty').hidden = L.leads.length > 0;
+        tabCount();
+      }, 350);
+    }).catch(function (err) {
+      c.sending = false;
+      r.btns.forEach(function (b) { b.disabled = false; });
+      if (err.bad && /code|pin/i.test(err.message)) { leadsLogout(); say('lgerr', 'Wrong code'); return; }
+      r.err.textContent = err.message;
+    });
+  }
+
+  // ---- the call: the page goes away, then comes back ----
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState !== 'visible' || !L.on) return;
+    if (L.pending) {
+      var p = L.pending;
+      L.pending = null;
+      L.open[String(p.id)] = true;
+      L.last = String(p.id);
+      store('leadsLast', L.last);
+      applyOpen();
+      lapi({ action: 'call', pin: L.pin, id: p.id, startedAt: new Date(p.t).toISOString(), awayMs: Date.now() - p.t }).catch(function () { });
+    }
+    if (TAB === 'leads' && L.pin && $('lwho').hidden) leadsRefresh();
+  });
+  setInterval(function () {
+    if (L.on && TAB === 'leads' && L.pin && document.visibilityState === 'visible' && $('lwho').hidden) leadsRefresh();
+  }, LEADS_EVERY);
+
+  // ---- Add driver: the New driver flow, filled from the lead ----
+  function resetDriver() {
+    S.photos = []; S.slots = []; S.sig = ''; S.read = null; S.fields = {}; S.orig = {}; S.edited = {}; S.seen = {}; S.area = ''; S.areaIn = ''; S.areaDone = ''; S.areaHow = ''; S.areaBusy = ''; S.rid = ''; S.vehicle = ''; S.hours = 0; S.shift = ''; S.open = -1; S.from = null;
+    $('phone').value = ''; $('area').value = '';
+    $('fromlead').hidden = true;
+    paintThumbs(); paintVeh(); paintWork();
+    say('e1', ''); say('e2', ''); say('e3', '');
+  }
+  function b64file(p, i) {
+    var bin = atob(String(p.data || ''));
+    var u8 = new Uint8Array(bin.length);
+    for (var k = 0; k < bin.length; k++) u8[k] = bin.charCodeAt(k);
+    return new File([u8], String(p.name || ('photo' + (i + 1) + '.jpg')), { type: String(p.mime || 'image/jpeg') });
+  }
+  function startDriver(lead, files) {
+    resetDriver();
+    setTab('driver');
+    $('mod').value = L.agent || $('mod').value;
+    if (lead) {
+      S.from = { id: lead.id, name: String(lead.name || lead.phone || '') };
+      $('phone').value = phoneOf(lead.phone) || String(lead.phone || '');
+      $('fromlead').textContent = 'From lead: ' + S.from.name;
+      $('fromlead').hidden = false;
+    }
+    (files || []).slice(0, MAXP).forEach(function (f) { loadPhoto(f); });
+    if (S.code) openForm(); else show('gate');
+  }
+  function addDriver(lead, c) {
+    if (!(+lead.photos > 0)) { startDriver(lead, []); return; }
+    var b = c.r.add;
+    b.disabled = true;
+    var old = b.textContent;
+    b.textContent = 'Loading photos...';
+    lapi({ action: 'photos', pin: L.pin, id: lead.id }).then(function (j) {
+      b.disabled = false; b.textContent = old;
+      startDriver(lead, (j.photos || []).map(b64file));
+    }).catch(function (err) {
+      b.disabled = false; b.textContent = old;
+      c.r.err.textContent = err.message;
+      L.open[c.dataset.id] = true;
+      applyOpen();
+    });
+  }
+  function leadAdded() {
+    var f = S.from;
+    if (!f || !L.on || !L.pin) return;
+    S.from = null;
+    lapi({ action: 'added', pin: L.pin, id: f.id }).then(function () { leadsRefresh(); }).catch(function () { });
+  }
+
+  // ---- photos shared from WhatsApp (Android): the service worker keeps them, this page asks who they are for ----
+  function readShared() {
+    if (!window.caches) return Promise.resolve([]);
+    return caches.open('tf-share').then(function (cache) {
+      return cache.keys().then(function (keys) {
+        keys.sort(function (a, b) { return a.url < b.url ? -1 : 1; });
+        return Promise.all(keys.map(function (k) {
+          return cache.match(k).then(function (res) {
+            return res.blob().then(function (blob) { return new File([blob], res.headers.get('x-name') || 'photo.jpg', { type: blob.type || 'image/jpeg' }); });
+          });
+        }));
+      });
+    }).catch(function () { return []; });
+  }
+  function clearShared() { try { if (window.caches) caches.delete('tf-share'); } catch (e) { } L.shared = null; L.wantWho = false; }
+  function openWho() {
+    leadsPane('lwho');
+    var th = $('wthumbs');
+    th.innerHTML = '';
+    (L.shared || []).forEach(function (f) {
+      var d = el('div', 'th'), img = new Image();
+      var u = URL.createObjectURL(f);
+      img.onload = function () { URL.revokeObjectURL(u); };
+      img.src = u;
+      d.appendChild(img);
+      th.appendChild(d);
+    });
+    var box = $('wleads');
+    box.innerHTML = '';
+    var build = function () {
+      box.innerHTML = '';
+      var last = store('leadsLast');
+      var list = L.leads.slice().sort(function (a, b) { return (String(b.id) === last ? 1 : 0) - (String(a.id) === last ? 1 : 0); });
+      list.forEach(function (ld) {
+        var b = el('button', 'wbtn' + (String(ld.id) === last ? ' last' : ''));
+        b.type = 'button';
+        var n = el('b', '', String(ld.name || ld.phone || '')); n.dir = 'auto';
+        b.appendChild(n);
+        b.appendChild(el('small', '', String(ld.phone || '') + (String(ld.id) === last ? ' - you called this one last' : '')));
+        b.onclick = function () { var f = L.shared || []; clearShared(); startDriver(ld, f.concat([])); loadLeadPhotosToo(ld); };
+        box.appendChild(b);
+      });
+    };
+    build();
+    leadsRefresh().then(build);
+  }
+  // when she picks a lead for shared photos: the photos that wait on that lead join them
+  function loadLeadPhotosToo(ld) {
+    if (!(+ld.photos > 0)) return;
+    lapi({ action: 'photos', pin: L.pin, id: ld.id }).then(function (j) {
+      (j.photos || []).map(b64file).forEach(function (f) { if (S.photos.length < MAXP) loadPhoto(f); });
+    }).catch(function () { });
+  }
+  $('wother').onclick = function () { var f = L.shared || []; clearShared(); startDriver(null, f); };
+
+  // ---- notifications ----
+  function b64u(s) {
+    var p = (s + '===='.slice(s.length % 4 || 4)).replace(/-/g, '+').replace(/_/g, '/');
+    var raw = atob(p), out = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+  }
+  function notifyInit() {
+    var can = L.on && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && store('leadsPush') !== '1' && Notification.permission !== 'denied';
+    $('lnotify').hidden = !can;
+  }
+  $('lnotify').onclick = function () {
+    var vapid = L.vapid || store('leadsVapid');
+    if (!vapid) { say('lerr', 'Notifications are not ready. Tell the manager.'); return; }
+    Notification.requestPermission().then(function (p) {
+      if (p !== 'granted') throw new Error('Notifications are off. Allow them in the phone settings.');
+      return navigator.serviceWorker.ready;
+    }).then(function (reg) {
+      return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(vapid) });
+    }).then(function (sub) {
+      return lapi({ action: 'push', pin: L.pin, subscription: sub.toJSON() });
+    }).then(function () {
+      store('leadsPush', '1');
+      say('lerr', '');
+      notifyInit();
+    }).catch(function (err) { say('lerr', err && err.message ? err.message : 'Could not turn on notifications.'); });
+  };
+
+  // ---- start ----
+  function leadsInit() {
+    if (!L.on) return false;
+    document.body.classList.add('leadson');
+    $('tabs').hidden = false;
+    var lk = document.createElement('link'); lk.rel = 'manifest'; lk.href = 'manifest.webmanifest'; document.head.appendChild(lk);
+    var ai = document.createElement('link'); ai.rel = 'apple-touch-icon'; ai.href = 'icon-192.png'; document.head.appendChild(ai);
+    L.pin = store('leadsPin'); L.agent = store('leadsAgent'); L.vapid = store('leadsVapid'); L.last = store('leadsLast');
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function () { });
+      navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'open-leads') setTab('leads'); });
+    }
+    var shared = /[?&]shared=1/.test(location.search);
+    try { if (/[?&](shared|tab)=/.test(location.search) && history.replaceState) history.replaceState(null, '', location.pathname); } catch (e) { }
+    tabCount();
+    if (shared) {
+      readShared().then(function (files) {
+        L.shared = files;
+        L.wantWho = files.length > 0;
+        setTab('leads');
+      });
+    } else {
+      setTab('leads');
+    }
+    return true;
+  }
+
   setOffice(CFG.office || store('intakeOffice'));
+  leadsInit();
   start();
   window.__intake = S;
 })();
