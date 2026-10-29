@@ -115,13 +115,14 @@ button { font: inherit; }
 .sum { padding: 12px; border-radius: 12px; margin-bottom: 14px; font-weight: 600; }
 .sum.ok { background: #d6f3e4; color: #0d6b41; }
 .sum.warn { background: var(--bad-bg); color: var(--bad); }
+.sum.once { background: var(--card); border: 1px solid var(--line); color: var(--ink); font-weight: 500; }
 .done { text-align: center; padding: 30px 10px; }
 .code { font-size: 44px; font-weight: 800; letter-spacing: 1px; color: var(--brand); margin: 10px 0; }
 </style>
 </head>
 <body>
 <header>
-  <div class="brand">TechFlex <span>Intake</span> <small id="ver">v72</small></div>
+  <div class="brand">TechFlex <span>Intake</span> <small id="ver">v73</small></div>
   <div id="steps"><i></i><i></i><i></i></div>
 </header>
 
@@ -181,6 +182,7 @@ button { font: inherit; }
     <h2>Check the data</h2>
     <div id="sum" class="sum ok"></div>
     <div id="readnote" class="sum warn" style="display:none"></div>
+    <div id="oncenote" class="sum once" style="display:none"></div>
     <div id="docs"></div>
     <p class="note err" id="e3"></p>
     <div class="busy" id="b3"><div class="spin"></div><div id="b3t">Saving...</div></div>
@@ -216,10 +218,10 @@ button { font: inherit; }
   var ORIENT_SIDE = 520;
   var READ_FRONT = 1600, READ_BACK = 1100, ZOOM_W = 1500, SAVE_SIDE = 1600, VIEW_SIDE = 900;      // the AI gets each card BIGGER (a small card is zoomed up to 6 times) and sharper
   var MAX_UP = 6, VIEW_UP = 3;
-  var WAIT = Object.assign({ locate: 100000, orient: 60000, read: 240000, save: 150000, ping: 30000 }, CFG.waits || {});      // how long the page waits for each call (ms)
+  var WAIT = Object.assign({ locate: 150000, orient: 60000, read: 240000, save: 150000, ping: 30000 }, CFG.waits || {});      // how long the page waits for each call (ms)
 
   var pidn = 0;
-  var S = { code: '', info: null, photos: [], slots: [], vehicle: '', step: 'gate', open: -1, read: null, fields: {}, orig: {}, edited: {}, seen: {}, area: '', areaTask: null, rid: '', busy: false };
+  var S = { code: '', info: null, photos: [], slots: [], vehicle: '', step: 'gate', open: -1, read: null, fields: {}, orig: {}, edited: {}, seen: {}, area: '', areaIn: '', areaDone: '', rid: '', busy: false };
 
   function $(id) { return document.getElementById(id); }
   function hasArabic(v) { return /[\u0600-\u06FF]/.test(String(v || '')); }
@@ -266,6 +268,7 @@ button { font: inherit; }
         if (!j.ok) {
           var e = new Error(j.error || 'Something went wrong.');
           e.auth = !!j.auth;
+          e.limit = j.limit || '';
           throw e;
         }
         return j.r;
@@ -431,11 +434,7 @@ button { font: inherit; }
     store('intakeMod', mod);
     $('phone').value = phone;
     var areaText = $('area').value.replace(/\s+/g, ' ').trim();
-    if (areaText !== S.areaIn) {                                                                    // the area in English: the server has a list of the usual areas and asks the AI for the rest
-      S.areaIn = areaText;
-      S.area = areaText;
-      S.areaTask = hasArabic(areaText) ? api('area', { text: areaText }).then(function (r) { if (r && r.area && S.areaIn === areaText) S.area = r.area; }, function () { }) : Promise.resolve();
-    }
+    if (areaText !== S.areaIn) { S.areaIn = areaText; S.area = areaText; S.areaDone = ''; }          // the area in English: the server makes it when it reads the documents (the list first, then the AI)
     var sig = S.photos.map(function (p) { return p.id; }).join(',');
     if (S.slots.length && S.sig === sig) { show('s2'); paintSlots(); return; }          // the same photos: the pictures stay as they are
     busy('b1', true, 'Finding the documents...');
@@ -453,6 +452,15 @@ button { font: inherit; }
       });
     }).catch(function (err) {
       busy('b1', false);
+      if (err && err.limit === 'day') {                                                              // the AI cannot be used today: she cuts out each document by hand
+        S.sig = sig;
+        S.slots = makeSlots([]);
+        S.open = -1;
+        show('s2');
+        paintSlots();
+        say('e2', err.message + ' Tell the manager. ' + $('e2').textContent);
+        return;
+      }
       failed(err, 'e1');
     });
   };
@@ -796,9 +804,11 @@ button { font: inherit; }
         }
       });
       busy('b2', true, 'Reading the documents...');
-      return api('read', { id: docs.id, dl: docs.dl, vl: docs.vl, phone: $('phone').value });
-    }).then(function (r) {
-      return Promise.resolve(S.areaTask).then(function () { return r; });
+      var ask = hasArabic(S.areaIn) && S.areaDone !== S.areaIn ? S.areaIn : '';                     // an Arabic area is turned to English by the server, together with the reading
+      return api('read', { id: docs.id, dl: docs.dl, vl: docs.vl, phone: $('phone').value, area: ask }).then(function (r) {
+        if (ask && r && r.area && S.areaIn === ask && !hasArabic(r.area)) { S.area = r.area; S.areaDone = ask; }
+        return r;
+      });
     }).then(function (r) {
       busy('b2', false);
       S.read = r;
@@ -1048,8 +1058,16 @@ button { font: inherit; }
     var rn = $('readnote'), fl = (S.read && S.read.failed) || {};
     var fn = Object.keys(fl).filter(function (d) { return DOC_FIELDS[d] && DOC_FIELDS[d].some(function (x) { return !S.edited[x]; }); });      // a document that she typed by hand is not told again
     if (rn) {
+      var lim = (S.read && S.read.aiLimit) || '';
+      var advice = lim === 'day' ? ' Type its data by hand. Tell the manager.' : (lim === 'busy' ? ' Wait one minute, then tap Back and then Read documents again, or type its data by hand.' : ' Type its data by hand, or tap Back and then Read documents again.');
       rn.style.display = fn.length ? 'block' : 'none';
-      rn.textContent = fn.length ? fn.map(function (d) { return DOC_TEXT[d]; }).join(' and ') + ' could not be read: ' + (typeof fl[fn[0]] === 'string' ? fl[fn[0]] : 'No answer.') + ' Type its data by hand, or tap Back and then Read documents again.' : '';
+      rn.textContent = fn.length ? fn.map(function (d) { return DOC_TEXT[d]; }).join(' and ') + ' could not be read: ' + (typeof fl[fn[0]] === 'string' ? fl[fn[0]] : 'No answer.') + advice : '';
+    }
+    var ck = (S.read && S.read.checked) || {}, un = (S.read && S.read.unclear) || {}, on = $('oncenote');
+    var once = Object.keys(ck).filter(function (d) { return DOC_FIELDS[d] && ck[d] === false && !fl[d] && !un[d] && DOC_FIELDS[d].some(function (x) { return !S.edited[x]; }); });      // read once only: there was no second look
+    if (on) {
+      on.style.display = once.length ? 'block' : 'none';
+      on.textContent = once.length ? once.map(function (d) { return DOC_TEXT[d]; }).join(' and ') + (once.length > 1 ? ' were' : ' was') + ' read once only (no second look). Check each value with its arrow.' : '';
     }
     var tries = S.read && S.read.tries;
     if (tries && Object.keys(tries).some(function (k) { return tries[k] > 1; })) sum.textContent += ' (Some documents were read again.)';
@@ -1083,7 +1101,7 @@ button { font: inherit; }
 
   // ---------- again ----------
   $('again').onclick = function () {
-    S.photos = []; S.slots = []; S.sig = ''; S.read = null; S.fields = {}; S.orig = {}; S.edited = {}; S.seen = {}; S.area = ''; S.areaIn = ''; S.areaTask = null; S.rid = ''; S.vehicle = ''; S.open = -1;
+    S.photos = []; S.slots = []; S.sig = ''; S.read = null; S.fields = {}; S.orig = {}; S.edited = {}; S.seen = {}; S.area = ''; S.areaIn = ''; S.areaDone = ''; S.rid = ''; S.vehicle = ''; S.open = -1;
     $('phone').value = ''; $('area').value = '';
     paintThumbs(); paintVeh();
     say('e1', ''); say('e2', ''); say('e3', '');
