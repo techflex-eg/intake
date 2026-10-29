@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#674ea7">
-<title>TechFlex Intake</title>
+<title>Intake</title>
 <style>
 :root {
   --bg: #f4f2f8; --card: #ffffff; --ink: #1d1b25; --muted: #6b6878; --line: #dcd8e6;
@@ -38,6 +38,9 @@ input:focus, select:focus { outline: none; border-color: var(--brand); }
 .seg { display: flex; gap: 8px; }
 .seg button { flex: 1; min-height: 48px; font: inherit; font-weight: 600; color: var(--ink); background: var(--bg); border: 2px solid var(--line); border-radius: 10px; }
 .seg button.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+.seg button small { display: block; font-size: 12px; font-weight: 500; opacity: .85; }
+.seg.tall button { padding: 6px 4px; line-height: 1.25; }
+#shiftbox label { margin-top: 12px; }
 button { font: inherit; }
 .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 18px; border-radius: 12px; border: 2px solid var(--brand); background: transparent; color: var(--brand); font-weight: 700; }
 .btn.fill { background: var(--brand); color: #fff; }
@@ -123,7 +126,7 @@ button { font: inherit; }
 </head>
 <body>
 <header>
-  <div class="brand">TechFlex <span>Intake</span> <small id="ver">v74</small></div>
+  <div class="brand"><b id="office"></b> <span>Intake</span> <small id="ver">v75</small></div>
   <div id="steps"><i></i><i></i><i></i></div>
 </header>
 
@@ -149,9 +152,15 @@ button { font: inherit; }
       <input id="phone" type="tel" inputmode="numeric" maxlength="20" autocomplete="off" placeholder="01XXXXXXXXX">
       <label for="area">Area</label>
       <input id="area" type="text" dir="auto" maxlength="60" autocomplete="off">
-      <p class="note" style="margin:4px 0 0">Arabic or English: it is saved in English.</p>
+      <p class="note" style="margin:4px 0 0">Arabic or English: it is saved in English letters.</p>
       <label>Vehicle type</label>
       <div class="seg" id="veh"></div>
+      <label>Work hours</label>
+      <div class="seg" id="hrs"></div>
+      <div id="shiftbox" hidden>
+        <label>Shift</label>
+        <div class="seg tall" id="shf"></div>
+      </div>
       <label for="day">Day0 date</label>
       <select id="day"></select>
     </div>
@@ -222,12 +231,20 @@ button { font: inherit; }
   var WAIT = Object.assign({ locate: 150000, orient: 60000, read: 240000, save: 150000, ping: 30000 }, CFG.waits || {});      // how long the page waits for each call (ms)
 
   var pidn = 0;
-  var S = { code: '', info: null, photos: [], slots: [], vehicle: '', step: 'gate', open: -1, read: null, fields: {}, orig: {}, edited: {}, seen: {}, area: '', areaIn: '', areaDone: '', rid: '', busy: false };
+  var S = { code: '', info: null, photos: [], slots: [], vehicle: '', hours: 0, shift: '', step: 'gate', open: -1, read: null, fields: {}, orig: {}, edited: {}, seen: {}, area: '', areaIn: '', areaDone: '', areaHow: '', areaBusy: '', rid: '', busy: false };
 
   function $(id) { return document.getElementById(id); }
   function hasArabic(v) { return /[\u0600-\u06FF]/.test(String(v || '')); }
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k) || ''; localStorage.setItem(k, v); } catch (e) { } return ''; }
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; }
+  // The name of the office (the server sends it: it is the Vendor of the drivers). It is kept on the phone, so the gate shows it too.
+  function setOffice(name) {
+    name = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+    if (!name) return;
+    $('office').textContent = name;
+    document.title = name + ' Intake';
+    store('intakeOffice', name);
+  }
 
   // ---------- the steps ----------
   function show(id) {
@@ -294,6 +311,7 @@ button { font: inherit; }
   function openForm() {
     api('ping').then(function (info) {
       S.info = info;
+      setOffice(info.office);
       fillDays();
       show('s1');
     }).catch(function (err) {
@@ -310,6 +328,7 @@ button { font: inherit; }
     api('ping').then(function (info) {
       store('intakeCode', v);
       S.info = info;
+      setOffice(info.office);
       fillDays();
       show('s1');
     }).catch(function (err) { S.code = ''; say('gerr', err.message); });
@@ -347,13 +366,46 @@ button { font: inherit; }
         seg.appendChild(b);
       });
     }
+    var hrs = $('hrs');
+    if (!hrs.children.length) {
+      [[5, '5 hours'], [9, '9 hours']].forEach(function (h) {
+        var b = el('button', '', h[1]);
+        b.type = 'button';
+        b.dataset.v = String(h[0]);
+        b.onclick = function () { S.hours = h[0]; if (h[0] !== 5) S.shift = ''; paintWork(); };
+        hrs.appendChild(b);
+      });
+    }
+    var shf = $('shf');
+    if (!shf.children.length) {
+      [['morning', 'Morning', '7 AM'], ['noon', 'Noon', '12 PM'], ['evening', 'Evening', '5 PM']].forEach(function (x) {
+        var b = el('button', '');
+        b.type = 'button';
+        b.dataset.v = x[0];
+        b.appendChild(document.createTextNode(x[1]));
+        b.appendChild(el('small', '', x[2]));
+        b.onclick = function () { S.shift = x[0]; paintWork(); };
+        shf.appendChild(b);
+      });
+    }
     paintVeh();
+    paintWork();
     $('mod').value = $('mod').value || store('intakeMod');
   }
   function paintVeh() {
     var kids = $('veh').children;
     for (var i = 0; i < kids.length; i++) kids[i].className = kids[i].textContent === S.vehicle ? 'on' : '';
   }
+  // 5 hours: the girl chooses the shift too (morning 7 AM, noon 12 PM, evening 5 PM). 9 hours: no shift.
+  var SHIFT_TEXT = { morning: 'Morning 7 AM', noon: 'Noon 12 PM', evening: 'Evening 5 PM' };
+  function paintWork() {
+    var kids = $('hrs').children, i;
+    for (i = 0; i < kids.length; i++) kids[i].className = kids[i].dataset.v === String(S.hours) ? 'on' : '';
+    $('shiftbox').hidden = S.hours !== 5;
+    kids = $('shf').children;
+    for (i = 0; i < kids.length; i++) kids[i].className = kids[i].dataset.v === S.shift ? 'on' : '';
+  }
+  function workText() { return S.hours === 5 ? '5 hours - ' + (SHIFT_TEXT[S.shift] || '') : (S.hours === 9 ? '9 hours' : ''); }
   $('addph').onclick = function () { $('file').click(); };
   $('file').onchange = function () {
     var files = Array.prototype.slice.call(this.files || []);
@@ -429,13 +481,15 @@ button { font: inherit; }
     if (!/^01[0-9]{9}$/.test(phone)) return say('e1', 'The phone must be 11 digits and start with 01.');
     if (!$('area').value.trim()) return say('e1', 'Write the area.');
     if (!S.vehicle) return say('e1', 'Choose the vehicle type.');
+    if (!S.hours) return say('e1', 'Choose the work hours: 5 or 9.');
+    if (S.hours === 5 && !S.shift) return say('e1', 'Choose the shift: Morning, Noon or Evening.');
     if (!S.photos.length) return say('e1', 'Add at least one photo.');
     if (S.photos.some(function (p) { return p.pending; })) return say('e1', 'Wait: the photos are still loading.');
     say('e1', '');
     store('intakeMod', mod);
     $('phone').value = phone;
     var areaText = $('area').value.replace(/\s+/g, ' ').trim();
-    if (areaText !== S.areaIn) { S.areaIn = areaText; S.area = areaText; S.areaDone = ''; }          // the area in English: the server makes it when it reads the documents (the list first, then the AI)
+    if (areaText !== S.areaIn) { S.areaIn = areaText; S.area = areaText; S.areaDone = ''; S.areaHow = ''; }          // the area in English letters: the server makes it when it reads the documents (the list, then the AI, then a rule)
     var sig = S.photos.map(function (p) { return p.id; }).join(',');
     if (S.slots.length && S.sig === sig) { show('s2'); paintSlots(); return; }          // the same photos: the pictures stay as they are
     busy('b1', true, 'Finding the documents...');
@@ -805,9 +859,9 @@ button { font: inherit; }
         }
       });
       busy('b2', true, 'Reading the documents...');
-      var ask = hasArabic(S.areaIn) && S.areaDone !== S.areaIn ? S.areaIn : '';                     // an Arabic area is turned to English by the server, together with the reading
+      var ask = S.areaDone !== S.areaIn ? S.areaIn : '';                                           // the server writes the area in English letters, together with the reading
       return api('read', { id: docs.id, dl: docs.dl, vl: docs.vl, phone: $('phone').value, area: ask }).then(function (r) {
-        if (ask && r && r.area && S.areaIn === ask && !hasArabic(r.area)) { S.area = r.area; S.areaDone = ask; }
+        if (ask && r && r.area && S.areaIn === ask && !hasArabic(r.area)) { S.area = r.area; S.areaDone = ask; S.areaHow = r.areaHow || ''; }
         return r;
       });
     }).then(function (r) {
@@ -872,7 +926,6 @@ button { font: inherit; }
     var today = S.info.today;
     if (!/^01[0-9]{9}$/.test(f.phone || '')) add('phone', 'Bad phone');
     if (!String(f.area || '').trim()) add('area', 'No area');
-    else if (hasArabic(f.area)) add('area', 'Area not in English');
     if (!String(f.name || '').trim()) add('name', 'No name');
     else if (r.nameGuess && !edited.name) add('name', 'Name written from the Arabic: check the spelling');
     var id = digits(f.national_id);
@@ -906,6 +959,8 @@ button { font: inherit; }
   function infoLines() {
     var r = S.read || {}, out = {};
     if (r.idConfirmed && r.idCard && r.idDl && r.idCard !== r.idDl && !S.edited.national_id && digits(S.fields.national_id) === r.idCard) out.national_id = 'The license prints another number: ' + r.idDl + '. The ID card number is used.';
+    if (S.areaBusy) out.area = 'Writing it in English letters...';
+    else if (S.areaHow === 'rule' && !S.edited.area) out.area = 'Spelled by the program: check the spelling.';
     return out;
   }
 
@@ -925,7 +980,15 @@ button { font: inherit; }
     var face = slotData('driver_photo');
     if (face) { var fw = el('div', 'dimg small'); fw.appendChild(face); drv.appendChild(fw); }
     drv.appendChild(fieldRow('phone', 'Phone', 'tel'));
-    drv.appendChild(fieldRow('area', 'Area (in English)', 'text'));
+    drv.appendChild(fieldRow('area', 'Area (in English letters)', 'text'));
+    if (S.hours) {                                                                   // what she chose in step 1 (to see it before she saves)
+      var wk = el('div', 'f');
+      wk.appendChild(el('label', '', 'Work hours'));
+      var wv = el('div', 'ro', workText());
+      wv.id = 'workv';
+      wk.appendChild(wv);
+      drv.appendChild(wk);
+    }
     box.appendChild(drv);
     GROUPS.forEach(function (g) {
       var card = el('div', 'card');
@@ -1039,11 +1102,27 @@ button { font: inherit; }
     };
     inp.addEventListener(type === 'select' ? 'change' : 'input', onchange);
     inp.addEventListener('blur', function () { if (S.read && S.read.unsure && S.read.unsure[key] && !S.seen[key]) { S.seen[key] = true; refresh(); } });      // she looked at the card and at this field
+    if (key === 'area') inp.addEventListener('blur', function () { turnArea(inp); });                 // an area typed in Arabic is written in English letters when she leaves the field
     wrap.appendChild(inp);
     var rs = el('div', 'reason');
     rs.id = 'r_' + key;
     wrap.appendChild(rs);
     return wrap;
+  }
+  function turnArea(inp) {
+    var v = String(inp.value || '').replace(/\s+/g, ' ').trim();
+    if (!v || !hasArabic(v) || S.areaBusy === v) return;
+    S.areaBusy = v;
+    refresh();
+    api('area', { text: v }).then(function (r) {
+      if (S.areaBusy === v) S.areaBusy = '';
+      if (r && r.area && !hasArabic(r.area) && String(inp.value || '').replace(/\s+/g, ' ').trim() === v) {          // she did not change it meanwhile
+        inp.value = r.area;
+        S.fields.area = r.area;
+        S.edited.area = String(r.area) !== String(S.orig.area || '');
+      }
+      refresh();
+    }).catch(function () { if (S.areaBusy === v) S.areaBusy = ''; refresh(); });                    // no answer: the server writes it in English letters when it saves
   }
   function refresh() {
     var bad = check(), info = infoLines();
@@ -1088,7 +1167,7 @@ button { font: inherit; }
     S.slots.forEach(function (s) { if (!s.ok) return; images[s.side] = (s.data || renderCrop(s, SAVE_SIDE).toDataURL('image/jpeg', 0.85)).replace(/^data:image\/jpeg;base64,/, ''); });
     var f = S.fields;
     var args = {
-      moderator: $('mod').value, phone: f.phone, area: f.area, vehicle: S.vehicle, day0: $('day').value,
+      moderator: $('mod').value, phone: f.phone, area: f.area, vehicle: S.vehicle, hours: S.hours, shift: S.hours === 5 ? S.shift : '', day0: $('day').value,
       fields: { name: f.name, national_id: f.national_id, dl_issue: f.dl_issue, dl_expiry: f.dl_expiry, plate: f.plate, vin: f.vin, compliance: f.compliance },
       edited: S.edited, idCard: S.read.idCard, idDl: S.read.idDl, idConfirmed: !!S.read.idConfirmed, nameGuess: !!S.read.nameGuess, unclear: S.read.unclear || {}, failed: S.read.failed || {}, unsure: stillUnsure(), images: images
     };
@@ -1110,13 +1189,14 @@ button { font: inherit; }
 
   // ---------- again ----------
   $('again').onclick = function () {
-    S.photos = []; S.slots = []; S.sig = ''; S.read = null; S.fields = {}; S.orig = {}; S.edited = {}; S.seen = {}; S.area = ''; S.areaIn = ''; S.areaDone = ''; S.rid = ''; S.vehicle = ''; S.open = -1;
+    S.photos = []; S.slots = []; S.sig = ''; S.read = null; S.fields = {}; S.orig = {}; S.edited = {}; S.seen = {}; S.area = ''; S.areaIn = ''; S.areaDone = ''; S.areaHow = ''; S.areaBusy = ''; S.rid = ''; S.vehicle = ''; S.hours = 0; S.shift = ''; S.open = -1;
     $('phone').value = ''; $('area').value = '';
-    paintThumbs(); paintVeh();
+    paintThumbs(); paintVeh(); paintWork();
     say('e1', ''); say('e2', ''); say('e3', '');
     openForm();
   };
 
+  setOffice(CFG.office || store('intakeOffice'));
   start();
   window.__intake = S;
 })();
