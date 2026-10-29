@@ -41,6 +41,8 @@ input:focus, select:focus { outline: none; border-color: var(--brand); }
 .seg button small { display: block; font-size: 12px; font-weight: 500; opacity: .85; }
 .seg.tall button { padding: 6px 4px; line-height: 1.25; }
 #shiftbox label { margin-top: 12px; }
+[hidden] { display: none !important; }
+#nine { font-weight: 600; }
 button { font: inherit; }
 .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 18px; border-radius: 12px; border: 2px solid var(--brand); background: transparent; color: var(--brand); font-weight: 700; }
 .btn.fill { background: var(--brand); color: #fff; }
@@ -126,7 +128,7 @@ button { font: inherit; }
 </head>
 <body>
 <header>
-  <div class="brand"><b id="office"></b> <span>Intake</span> <small id="ver">v75</small></div>
+  <div class="brand"><b id="office"></b> <span>Intake</span> <small id="ver">v76</small></div>
   <div id="steps"><i></i><i></i><i></i></div>
 </header>
 
@@ -157,6 +159,7 @@ button { font: inherit; }
       <div class="seg" id="veh"></div>
       <label>Work hours</label>
       <div class="seg" id="hrs"></div>
+      <div class="ro" id="nine" hidden></div>
       <div id="shiftbox" hidden>
         <label>Shift</label>
         <div class="seg tall" id="shf"></div>
@@ -362,7 +365,7 @@ button { font: inherit; }
       S.info.vehicles.forEach(function (v) {
         var b = el('button', '', v);
         b.type = 'button';
-        b.onclick = function () { S.vehicle = v; paintVeh(); };
+        b.onclick = function () { S.vehicle = v; paintVeh(); paintWork(); };
         seg.appendChild(b);
       });
     }
@@ -396,16 +399,28 @@ button { font: inherit; }
     var kids = $('veh').children;
     for (var i = 0; i < kids.length; i++) kids[i].className = kids[i].textContent === S.vehicle ? 'on' : '';
   }
-  // 5 hours: the girl chooses the shift too (morning 7 AM, noon 12 PM, evening 5 PM). 9 hours: no shift.
+  // A Van or a Helper always works 9 hours: the page does not ask (the server sends the list nineOnly; these two vehicles are the default when it does not).
+  // A Sedan: she chooses 5 or 9 hours, and the shift for 5 hours (morning 7 AM, noon 12 PM, evening 5 PM). 9 hours: no shift.
+  // S.hours and S.shift keep only what she chose herself for a Sedan; hoursNow() and shiftNow() give what is used (so a Van never leaves a 9 behind for a Sedan).
+  var NINE_DEFAULT = ['Van', 'Helper'];
+  function nineOnly(v) {
+    var list = (S.info && Array.isArray(S.info.nineOnly)) ? S.info.nineOnly : NINE_DEFAULT;
+    return !!v && list.indexOf(v) !== -1;
+  }
+  function hoursNow() { return nineOnly(S.vehicle) ? 9 : S.hours; }
+  function shiftNow() { return hoursNow() === 5 ? S.shift : ''; }
   var SHIFT_TEXT = { morning: 'Morning 7 AM', noon: 'Noon 12 PM', evening: 'Evening 5 PM' };
   function paintWork() {
-    var kids = $('hrs').children, i;
+    var nine = nineOnly(S.vehicle), kids = $('hrs').children, i;
+    $('hrs').hidden = nine;
+    $('nine').hidden = !nine;
+    if (nine) $('nine').textContent = '9 hours - automatic for ' + S.vehicle;
     for (i = 0; i < kids.length; i++) kids[i].className = kids[i].dataset.v === String(S.hours) ? 'on' : '';
-    $('shiftbox').hidden = S.hours !== 5;
+    $('shiftbox').hidden = hoursNow() !== 5;
     kids = $('shf').children;
     for (i = 0; i < kids.length; i++) kids[i].className = kids[i].dataset.v === S.shift ? 'on' : '';
   }
-  function workText() { return S.hours === 5 ? '5 hours - ' + (SHIFT_TEXT[S.shift] || '') : (S.hours === 9 ? '9 hours' : ''); }
+  function workText() { var h = hoursNow(); return h === 5 ? '5 hours - ' + (SHIFT_TEXT[S.shift] || '') : (h === 9 ? '9 hours' : ''); }
   $('addph').onclick = function () { $('file').click(); };
   $('file').onchange = function () {
     var files = Array.prototype.slice.call(this.files || []);
@@ -481,8 +496,8 @@ button { font: inherit; }
     if (!/^01[0-9]{9}$/.test(phone)) return say('e1', 'The phone must be 11 digits and start with 01.');
     if (!$('area').value.trim()) return say('e1', 'Write the area.');
     if (!S.vehicle) return say('e1', 'Choose the vehicle type.');
-    if (!S.hours) return say('e1', 'Choose the work hours: 5 or 9.');
-    if (S.hours === 5 && !S.shift) return say('e1', 'Choose the shift: Morning, Noon or Evening.');
+    if (!hoursNow()) return say('e1', 'Choose the work hours: 5 or 9.');
+    if (hoursNow() === 5 && !S.shift) return say('e1', 'Choose the shift: Morning, Noon or Evening.');
     if (!S.photos.length) return say('e1', 'Add at least one photo.');
     if (S.photos.some(function (p) { return p.pending; })) return say('e1', 'Wait: the photos are still loading.');
     say('e1', '');
@@ -981,7 +996,7 @@ button { font: inherit; }
     if (face) { var fw = el('div', 'dimg small'); fw.appendChild(face); drv.appendChild(fw); }
     drv.appendChild(fieldRow('phone', 'Phone', 'tel'));
     drv.appendChild(fieldRow('area', 'Area (in English letters)', 'text'));
-    if (S.hours) {                                                                   // what she chose in step 1 (to see it before she saves)
+    if (hoursNow()) {                                                                // what she chose in step 1, or the 9 hours of a Van or a Helper (to see it before she saves)
       var wk = el('div', 'f');
       wk.appendChild(el('label', '', 'Work hours'));
       var wv = el('div', 'ro', workText());
@@ -1167,7 +1182,7 @@ button { font: inherit; }
     S.slots.forEach(function (s) { if (!s.ok) return; images[s.side] = (s.data || renderCrop(s, SAVE_SIDE).toDataURL('image/jpeg', 0.85)).replace(/^data:image\/jpeg;base64,/, ''); });
     var f = S.fields;
     var args = {
-      moderator: $('mod').value, phone: f.phone, area: f.area, vehicle: S.vehicle, hours: S.hours, shift: S.hours === 5 ? S.shift : '', day0: $('day').value,
+      moderator: $('mod').value, phone: f.phone, area: f.area, vehicle: S.vehicle, hours: hoursNow(), shift: shiftNow(), day0: $('day').value,
       fields: { name: f.name, national_id: f.national_id, dl_issue: f.dl_issue, dl_expiry: f.dl_expiry, plate: f.plate, vin: f.vin, compliance: f.compliance },
       edited: S.edited, idCard: S.read.idCard, idDl: S.read.idDl, idConfirmed: !!S.read.idConfirmed, nameGuess: !!S.read.nameGuess, unclear: S.read.unclear || {}, failed: S.read.failed || {}, unsure: stillUnsure(), images: images
     };
