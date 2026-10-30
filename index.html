@@ -196,6 +196,9 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
 .link.arm { color: var(--bad); }
 .lcard .link { margin-top: 4px; }
 @media (prefers-reduced-motion: reduce) { button.flash { animation: none; } }
+.msgstep { margin-top: 10px; }
+.msgstep .btn { width: 100%; margin-top: 8px; }
+.msgstep textarea { width: 100%; }
 .wrow { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 16px; }
 .wrow b { font-size: 18px; }
 .wask { display: flex; gap: 8px; margin-top: 10px; direction: ltr; }
@@ -211,7 +214,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
 <body>
 <header>
   <div class="hrow">
-    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v83</span></div></div>
+    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v84</span></div></div>
     <div class="hbtns"><button type="button" class="hb" id="lang" aria-label="Language"></button><button type="button" class="hb" id="theme" aria-label="Day or night"></button><button type="button" class="hb" id="out" hidden>Sign out</button></div>
   </div>
     <div id="tabs" hidden><button type="button" id="tabL" class="on">Leads</button><button type="button" id="tabD">New driver</button><button type="button" id="tabW">My wallet</button></div>
@@ -403,6 +406,11 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     'Intake': '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u0645\u0646\u0627\u062f\u064a\u0628',
     'Office X': '\u0627\u0648\u0641\u064a\u0633 X',
     'My wallet': '\u0645\u062d\u0641\u0638\u062a\u064a',
+    'WhatsApp message': '\u0631\u0633\u0627\u0644\u0629 \u0627\u0644\u0648\u0627\u062a\u0633\u0627\u0628',
+    'Send on WhatsApp': '\u0627\u0628\u0639\u062a\u064a \u0639\u0644\u0649 \u0627\u0644\u0648\u0627\u062a\u0633\u0627\u0628',
+    'Write the message.': '\u0627\u0643\u062a\u0628\u064a \u0627\u0644\u0631\u0633\u0627\u0644\u0629.',
+    'Write the WhatsApp message.': '\u0627\u0643\u062a\u0628\u064a \u0631\u0633\u0627\u0644\u0629 \u0627\u0644\u0648\u0627\u062a\u0633\u0627\u0628.',
+    'WhatsApp was not opened. Send the message first.': '\u0627\u0644\u0648\u0627\u062a\u0633\u0627\u0628 \u0645\u0641\u062a\u062d\u0634. \u0627\u0628\u0639\u062a\u064a \u0627\u0644\u0631\u0633\u0627\u0644\u0629 \u0627\u0644\u0623\u0648\u0644.',
     'Advance': '\u0633\u0644\u0641\u0629',
     'Approved': '\u0627\u062a\u0648\u0627\u0641\u0642',
     'Earned today': '\u0627\u0644\u0646\u0647\u0627\u0631\u062f\u0647',
@@ -1714,8 +1722,9 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
   // When it is empty nothing of this shows and the page works as it did before (with the access code of the manager).
   // ONE code for the whole page: the 4-digit code of the girl (the Agents tab of the Call Center sheet) opens the leads and New driver.
   var LEADS_URL = String(LEADS_API_URL || CFG.leadsUrl || '').trim();
-  var L = { on: !!LEADS_URL && !/^PASTE/.test(LEADS_URL), pin: '', agent: '', done: 0, remaining: 0, waitCount: 0, leads: [], wait: [], wa: { first: '', remind: '' }, cards: {}, open: {}, pending: null, busyList: false, shared: null, wantWho: false, last: '', vapid: '', called: {}, tries: {}, logging: false };
+  var L = { on: !!LEADS_URL && !/^PASTE/.test(LEADS_URL), pin: '', agent: '', done: 0, remaining: 0, waitCount: 0, leads: [], wait: [], wa: {}, cards: {}, open: {}, pending: null, busyList: false, shared: null, wantWho: false, last: '', vapid: '', called: {}, tries: {}, waTries: {}, pendingRes: null, logging: false };
   var LEADS_EVERY = CFG.leadsEvery || 30000;
+  var WA_MIN_MS = CFG.waMinMs || 8000;          // she must stay in WhatsApp at least this long after she taps Send on WhatsApp (the second short try is accepted, the manager sees it as Short)
   var CALL_MIN_MS = CFG.callMinMs || 16000;      // a call shorter than this did not happen (the phone only opened and closed). In Egypt the first ring comes after 3 to 5 seconds, a driver answers after 3 or 4 rings.
 
   S.dial = function (number) { window.location.href = 'tel:' + number; };      // opens the phone dialer (a test can replace it)
@@ -1906,7 +1915,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     });
   };
   function leadsLogout() {
-    L.pin = ''; L.agent = ''; L.leads = []; L.wait = []; L.cards = {}; L.open = {}; L.called = {}; L.tries = {}; L.pending = null;
+    L.pin = ''; L.agent = ''; L.leads = []; L.wait = []; L.cards = {}; L.open = {}; L.called = {}; L.tries = {}; L.waTries = {}; L.pending = null; L.pendingRes = null;
     $('llist').innerHTML = ''; $('wlist').innerHTML = '';
     store('leadsPin', ''); store('leadsAgent', '');
     S.code = ''; S.info = null; S.step = 'gate';
@@ -1942,7 +1951,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
       L.wait = Array.isArray(j.waiting) ? j.waiting : [];
       L.remaining = L.leads.length;
       L.waitCount = L.wait.length;
-      if (j.wa) L.wa = { first: String(j.wa.first || ''), remind: String(j.wa.remind || '') };
+      if (j.wa && typeof j.wa === 'object') L.wa = j.wa;
       say('lerr', '');
       renderLeads();
     }).catch(function (err) {
@@ -2019,10 +2028,6 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     var hint = el('p', 'note lhint'); hint.hidden = true;
     c.appendChild(hint);
     var res = el('div', 'lres'); res.hidden = true;
-    res.appendChild(el('label', '', 'Call summary'));
-    var ta = el('textarea', ''); ta.rows = 3; ta.dir = 'auto'; ta.maxLength = 1000;
-    ta.placeholder = T('Write what happened in the call');
-    res.appendChild(ta);
     var rb = el('div', 'seg tall');
     var bn = el('button', '', 'No Answer'), bs = el('button', '', 'Will send the data'), bp = el('button', '', 'Postponed'), bi = el('button', '', 'Not Interested');
     [bn, bs, bp, bi].forEach(function (b) { b.type = 'button'; rb.appendChild(b); });
@@ -2030,9 +2035,17 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     var pp = el('div', 'seg'); pp.hidden = true;
     var pk = [['tomorrow', 'Tomorrow'], ['2days', 'In 2 days'], ['nextweek', 'Next week']].map(function (x) { var b = el('button', '', x[1]); b.type = 'button'; b.dataset.v = x[0]; pp.appendChild(b); return b; });
     res.appendChild(pp);
+    // the message step: the text of the result is ready (from the Rules box), she may change it, and she must send it on WhatsApp. The result is saved when she comes back.
+    var ms2 = el('div', 'msgstep'); ms2.hidden = true;
+    ms2.appendChild(el('label', '', 'WhatsApp message'));
+    var ta = el('textarea', ''); ta.rows = 4; ta.dir = 'auto'; ta.maxLength = 1000;
+    ms2.appendChild(ta);
+    var bsend = el('button', 'btn fill', 'Send on WhatsApp'); bsend.type = 'button';
+    ms2.appendChild(bsend);
+    res.appendChild(ms2);
     var er = el('p', 'note err'); res.appendChild(er);
     c.appendChild(res);
-    c.r = { name: nm, isNew: nw, time: tm, phone: ph, msg: ms, pics: pc, call: bc, wa: bw, add: ba, close: bx, hint: hint, res: res, ta: ta, post: pp, err: er, btns: [bn, bs, bp, bi, bx].concat(pk), lead: ld };
+    c.r = { rb: rb, ms2: ms2, send: bsend, name: nm, isNew: nw, time: tm, phone: ph, msg: ms, pics: pc, call: bc, wa: bw, add: ba, close: bx, hint: hint, res: res, ta: ta, post: pp, err: er, btns: [bn, bs, bp, bi, bx, bsend].concat(pk), lead: ld };
     top.onclick = function () {
       var id = c.dataset.id;
       if (!isCalled(c)) { showHint(c, T('Call first, then write the result.')); return; }      // the result menu opens only after a real call
@@ -2043,7 +2056,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
       var lead = c.r.lead;
       L.pending = { id: lead.id, t: Date.now(), via: 'wa' };
       showHint(c, '');
-      S.chat(cleanPhone(lead.phone), lead.kind === 'wait' ? (L.wa.remind || L.wa.first) : L.wa.first);      // her own text opens in WhatsApp; she only taps send
+      S.chat(cleanPhone(lead.phone), lead.kind === 'wait' ? (L.wa.Reminder || '') : '');      // the reminder text opens in WhatsApp; she only taps send
     };
     bc.onclick = function () {
       var lead = c.r.lead;
@@ -2054,17 +2067,39 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
       S.dial(cleanPhone(lead.phone));
     };
     ba.onclick = function () { addDriver(c.r.lead, c); };
-    bn.onclick = function () { sendResult(c, 'No Answer', ''); };
-    bs.onclick = function () { sendResult(c, 'Promised', ''); };
+    // a result is chosen: its message is shown. Nothing is saved until the message was sent on WhatsApp.
+    function pick(status, postpone, btn) {
+      c.pick = { status: status, postpone: postpone || '' };
+      r2().btns.forEach(function (b) { b.classList.remove('on'); });
+      if (btn) btn.classList.add('on');
+      ta.value = String((L.wa || {})[status] || '');
+      ms2.hidden = false;
+      r2().err.textContent = '';
+      try { ta.focus(); } catch (e) { }
+    }
+    function r2() { return c.r; }
+    bn.onclick = function () { pp.hidden = true; pick('No Answer', '', bn); };
+    bs.onclick = function () { pp.hidden = true; pick('Promised', '', bs); };
+    bi.onclick = function () { pp.hidden = true; pick('Not Interested', '', bi); };
+    bp.onclick = function () { pp.hidden = !pp.hidden; if (pp.hidden) { ms2.hidden = true; c.pick = null; bp.classList.remove('on'); } };
+    pk.forEach(function (b) { b.onclick = function () { bp.classList.add('on'); pick('Postponed', b.dataset.v, b); }; });
     var xt = null;
     bx.onclick = function () {                             // two taps: a tap by mistake does not close the card
       if (!xt) { bx.textContent = T('Tap again to close'); bx.classList.add('arm'); xt = setTimeout(function () { xt = null; bx.textContent = T('Will not send'); bx.classList.remove('arm'); }, 3500); return; }
       clearTimeout(xt); xt = null;
-      sendResult(c, 'Not Sending', '');
+      bx.textContent = T('Will not send'); bx.classList.remove('arm');
+      c.msgOpen = true; rb.hidden = true; pp.hidden = true;
+      res.hidden = false;
+      pick('Not Sending', '', null);
     };
-    bi.onclick = function () { sendResult(c, 'Not Interested', ''); };
-    bp.onclick = function () { pp.hidden = !pp.hidden; };
-    pk.forEach(function (b) { b.onclick = function () { sendResult(c, 'Postponed', b.dataset.v); }; });
+    bsend.onclick = function () {
+      var text = ta.value.trim();
+      if (!c.pick) return;
+      if (!text) { c.r.err.textContent = T('Write the message.'); return; }
+      c.r.err.textContent = '';
+      L.pendingRes = { id: c.dataset.id, t: Date.now(), status: c.pick.status, postpone: c.pick.postpone, text: text };
+      S.chat(cleanPhone(c.r.lead.phone), text);
+    };
     return c;
   }
   var TAGS = { 'new': 'NEW', replied: 'Reply', retry: 'Retry', back: 'Due', wait: 'Waiting' };
@@ -2095,21 +2130,22 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     r.wa.hidden = wait ? false : !isCalled(c);
     r.wa.className = wait ? 'btn fill' : 'btn';
     r.close.hidden = !wait;
-    r.res.hidden = wait ? true : !(L.open[c.dataset.id] && isCalled(c));
+    r.res.hidden = wait ? !c.msgOpen : !(L.open[c.dataset.id] && isCalled(c));
     r.call.className = isCalled(c) ? 'btn' : 'btn fill';
   }
   function applyOpen() {
-    Object.keys(L.cards).forEach(function (key) { var k = L.cards[key]; k.r.res.hidden = k.r.lead.kind === 'wait' ? true : !(L.open[key] && isCalled(k)); });
+    Object.keys(L.cards).forEach(function (key) { var k = L.cards[key]; k.r.res.hidden = k.r.lead.kind === 'wait' ? !k.msgOpen : !(L.open[key] && isCalled(k)); });
   }
 
   // ---- a result of a call ----
-  function sendResult(c, status, postpone) {
+  function sendResult(c, status, postpone, text, away, second) {
     var r = c.r, lead = r.lead;
     if (c.sending) return;
     c.sending = true;
     r.btns.forEach(function (b) { b.disabled = true; });
     r.err.textContent = '';
-    var body = { action: 'update', pin: L.pin, id: lead.id, status: status, comment: r.ta.value.trim() };
+    var body = { action: 'update', pin: L.pin, id: lead.id, status: status, message: text, waAwayMs: away };
+    if (second) body.second = true;
     if (status === 'Postponed') body.postpone = postpone;
     lapi(body).then(function () {
       toast(T('Saved \u2713'));
@@ -2140,6 +2176,14 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
   // The second short try opens the menu anyway (so she is never stuck). The server keeps the same rule and writes Call or Try in its Log with the seconds.
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState !== 'visible' || !L.on) return;
+    if (L.pendingRes) {
+      var q = L.pendingRes, qid = String(q.id), qaway = Date.now() - q.t, qc = L.cards[qid];
+      L.pendingRes = null;
+      if (qc) {
+        if (qaway >= WA_MIN_MS || (L.waTries[qid] || 0) >= 1) { L.waTries[qid] = 0; sendResult(qc, q.status, q.postpone, q.text, qaway, qaway < WA_MIN_MS); }
+        else { L.waTries[qid] = (L.waTries[qid] || 0) + 1; qc.r.err.textContent = T('WhatsApp did not open. Press Send again.'); }
+      }
+    }
     if (L.pending) {
       var p = L.pending, id = String(p.id), away = Date.now() - p.t;
       L.pending = null;
