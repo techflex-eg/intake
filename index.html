@@ -211,7 +211,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
 <body>
 <header>
   <div class="hrow">
-    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v82</span></div></div>
+    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v83</span></div></div>
     <div class="hbtns"><button type="button" class="hb" id="lang" aria-label="Language"></button><button type="button" class="hb" id="theme" aria-label="Day or night"></button><button type="button" class="hb" id="out" hidden>Sign out</button></div>
   </div>
     <div id="tabs" hidden><button type="button" id="tabL" class="on">Leads</button><button type="button" id="tabD">New driver</button><button type="button" id="tabW">My wallet</button></div>
@@ -403,6 +403,8 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     'Intake': '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u0645\u0646\u0627\u062f\u064a\u0628',
     'Office X': '\u0627\u0648\u0641\u064a\u0633 X',
     'My wallet': '\u0645\u062d\u0641\u0638\u062a\u064a',
+    'Advance': '\u0633\u0644\u0641\u0629',
+    'Approved': '\u0627\u062a\u0648\u0627\u0641\u0642',
     'Earned today': '\u0627\u0644\u0646\u0647\u0627\u0631\u062f\u0647',
     '{n} EGP': '{n} \u062c\u0646\u064a\u0647',
     'This month: {n} EGP': '\u0627\u0644\u0634\u0647\u0631 \u062f\u0647: {n} \u062c\u0646\u064a\u0647',
@@ -1810,7 +1812,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
   // ---- the wallet ----
   function money(n) { return T('{n} EGP', { n: String(Math.round(+n || 0)) }); }
   var WTYPE = { Call: 'Call payment', Active: 'Active driver', Bonus: 'Bonus', Advance: 'Advance', Payout: 'Payout', Reversal: 'Correction' };
-  var WSTAT = { Pending: 'Not confirmed', Confirmed: 'Confirmed', Paid: 'Paid out', Cancelled: 'Cancelled' };
+  var WSTAT = { 'Not confirmed': 'Not confirmed', Confirmed: 'Confirmed', 'Paid out': 'Paid out', Cancelled: 'Cancelled', Requested: 'Waiting for the manager', Approved: 'Approved', Rejected: 'Not approved' };
   var WREQ = { Pending: 'Waiting for the manager', Approved: 'Approved. The manager will pay it.', Paid: 'The advance was paid.', Rejected: 'Not approved' };
   function paintWallet(w) {
     $('wtoday').textContent = money(w.today);
@@ -1819,7 +1821,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     $('wpend').textContent = money(w.pending);
     $('wpaid').textContent = money(w.paid);
     var a = w.advance || {}, note = '';
-    if (a.open) note = T('Your request: {a} EGP - {s}', { a: a.amount === undefined ? a.open.amount : a.open.amount, s: WREQ[a.open.status] || a.open.status });
+    if (a.open) note = T('Your request: {a} EGP - {s}', { a: a.open.amount, s: WREQ[a.open.status] || a.open.status });
     else if (a.max > 0) note = T('You can ask up to {n} EGP now.', { n: a.max });
     else note = T('No confirmed money to ask for yet.');
     if (!a.open && a.last) note += '\n' + T('Last request: {a} EGP - {s}', { a: a.last.amount, s: WREQ[a.last.status] || a.last.status });
@@ -1837,16 +1839,16 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
       sm.appendChild(lab); sm.appendChild(document.createTextNode((e.label ? ' \u00b7 ' : '') + e.time));
       l.appendChild(sm);
       var r = el('div', 'r');
-      r.appendChild(el('b', '', (e.amount > 0 ? '+' : '') + money(e.amount)));
+      r.appendChild(el('b', '', (e.amount > 0 && e.type !== 'Advance' ? '+' : '') + money(e.amount)));
       r.appendChild(el('span', 'chip', T(WSTAT[e.status] || e.status)));
       row.appendChild(l); row.appendChild(r);
       box.appendChild(row);
     });
     $('wempty').hidden = !!(w.entries && w.entries.length);
   }
-  function walletRefresh() {
+  function walletRefresh(keep) {
     if (!L.on || !L.pin) return Promise.resolve();
-    return lapi({ action: 'wallet', pin: L.pin }).then(function (j) { say('wwerr', ''); paintWallet(j.wallet); }).catch(function (err) {
+    return lapi({ action: 'wallet', pin: L.pin }).then(function (j) { if (!keep) say('wwerr', ''); paintWallet(j.wallet); }).catch(function (err) {
       if (err.bad && /code|pin/i.test(err.message)) { leadsLogout(); say('lgerr', T('Wrong code')); return; }
       say('wwerr', TS(err.message));
     });
@@ -1859,7 +1861,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     wBusy = true; say('wwerr', '');
     lapi({ action: 'advance', pin: L.pin, amount: a }).then(function (j) {
       wBusy = false; $('wamt').value = ''; paintWallet(j.wallet); toast(T('Your request was sent.'));
-    }).catch(function (err) { wBusy = false; say('wwerr', TS(err.message)); walletRefresh(); });
+    }).catch(function (err) { wBusy = false; say('wwerr', TS(err.message)); walletRefresh(true); });
   };
 
   // ---- the code ----
