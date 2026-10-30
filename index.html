@@ -196,15 +196,25 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
 .link.arm { color: var(--bad); }
 .lcard .link { margin-top: 4px; }
 @media (prefers-reduced-motion: reduce) { button.flash { animation: none; } }
+.wrow { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 16px; }
+.wrow b { font-size: 18px; }
+.wask { display: flex; gap: 8px; margin-top: 10px; direction: ltr; }
+.wask input { flex: 1; min-width: 0; font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); }
+.wask .btn { flex: none; }
+.went { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.went small { display: block; color: var(--muted); font-size: 13px; }
+.went .r { text-align: end; }
+.went .r b { display: block; font-size: 17px; }
+.went.cx { opacity: .5; }
 </style>
 </head>
 <body>
 <header>
   <div class="hrow">
-    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v81</span></div></div>
+    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v82</span></div></div>
     <div class="hbtns"><button type="button" class="hb" id="lang" aria-label="Language"></button><button type="button" class="hb" id="theme" aria-label="Day or night"></button><button type="button" class="hb" id="out" hidden>Sign out</button></div>
   </div>
-    <div id="tabs" hidden><button type="button" id="tabL" class="on">Leads</button><button type="button" id="tabD">New driver</button></div>
+    <div id="tabs" hidden><button type="button" id="tabL" class="on">Leads</button><button type="button" id="tabD">New driver</button><button type="button" id="tabW">My wallet</button></div>
   <div id="steps"><i></i><i></i><i></i></div>
 </header>
 
@@ -316,6 +326,27 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
       <div id="wlist"></div>
       <p class="note" id="lempty" hidden style="text-align:center;font-weight:600;padding:24px 0">All done. Great work.</p>
     </div>
+    <div id="lwal" hidden>
+      <div class="card">
+        <div class="note" style="margin:0 0 6px">Earned today</div>
+        <div class="bignum" id="wtoday">0</div>
+        <div class="note" id="wmonth" style="margin-top:6px"></div>
+      </div>
+      <div class="card wsum">
+        <div class="wrow"><span>Confirmed</span><b id="wconf">0</b></div>
+        <div class="wrow"><span>Not confirmed</span><b id="wpend">0</b></div>
+        <div class="wrow"><span>Paid out</span><b id="wpaid">0</b></div>
+      </div>
+      <div class="card">
+        <h3 class="sec" style="margin:0 0 6px">Ask for an advance</h3>
+        <div class="note" id="wadvnote"></div>
+        <div class="wask" id="wask" hidden><input type="number" inputmode="numeric" min="1" id="wamt" placeholder="Amount"><button class="btn fill small" id="wsend" type="button">Send the request</button></div>
+      </div>
+      <p class="note err" id="wwerr"></p>
+      <h3 class="sec">Details</h3>
+      <div id="wlistd"></div>
+      <p class="note" id="wempty" hidden style="text-align:center">Nothing here yet.</p>
+    </div>
     <div id="lwho" hidden>
       <h2>Who are these photos for?</h2>
       <div class="thumbs2" id="wthumbs"></div>
@@ -371,6 +402,34 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
   var AR = {
     'Intake': '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u0645\u0646\u0627\u062f\u064a\u0628',
     'Office X': '\u0627\u0648\u0641\u064a\u0633 X',
+    'My wallet': '\u0645\u062d\u0641\u0638\u062a\u064a',
+    'Earned today': '\u0627\u0644\u0646\u0647\u0627\u0631\u062f\u0647',
+    '{n} EGP': '{n} \u062c\u0646\u064a\u0647',
+    'This month: {n} EGP': '\u0627\u0644\u0634\u0647\u0631 \u062f\u0647: {n} \u062c\u0646\u064a\u0647',
+    'Confirmed': '\u0645\u0636\u0645\u0648\u0646',
+    'Not confirmed': '\u0645\u0633\u062a\u0646\u064a \u0627\u0644\u062a\u0623\u0643\u064a\u062f',
+    'Paid out': '\u0627\u062a\u0635\u0631\u0641',
+    'Cancelled': '\u0645\u0644\u063a\u064a',
+    'Ask for an advance': '\u0627\u0637\u0644\u0628\u064a \u0633\u0644\u0641\u0629',
+    'You can ask up to {n} EGP now.': '\u062a\u0642\u062f\u0631\u064a \u062a\u0637\u0644\u0628\u064a \u0644\u062d\u062f {n} \u062c\u0646\u064a\u0647 \u062f\u0644\u0648\u0642\u062a\u064a.',
+    'No confirmed money to ask for yet.': '\u0644\u0633\u0647 \u0645\u0641\u064a\u0634 \u0641\u0644\u0648\u0633 \u0645\u0636\u0645\u0648\u0646\u0629 \u062a\u0637\u0644\u0628\u064a \u0645\u0646\u0647\u0627 \u0633\u0644\u0641\u0629.',
+    'Amount': '\u0627\u0644\u0645\u0628\u0644\u063a',
+    'Send the request': '\u0627\u0628\u0639\u062a\u064a \u0627\u0644\u0637\u0644\u0628',
+    'Waiting for the manager': '\u0645\u0633\u062a\u0646\u064a \u0645\u0648\u0627\u0641\u0642\u0629 \u0627\u0644\u0645\u062f\u064a\u0631',
+    'Approved. The manager will pay it.': '\u0627\u062a\u0648\u0627\u0641\u0642 \u0639\u0644\u064a\u0647\u0627. \u0627\u0644\u0645\u062f\u064a\u0631 \u0647\u064a\u0635\u0631\u0641\u0647\u0627.',
+    'Not approved': '\u0645\u0634 \u0645\u0648\u0627\u0641\u0642 \u0639\u0644\u064a\u0647\u0627',
+    'The advance was paid.': '\u0627\u0644\u0633\u0644\u0641\u0629 \u0627\u062a\u0635\u0631\u0641\u062a.',
+    'Your request was sent.': '\u0627\u0644\u0637\u0644\u0628 \u0627\u062a\u0628\u0639\u062a.',
+    'Details': '\u0627\u0644\u062a\u0641\u0627\u0635\u064a\u0644',
+    'Nothing here yet.': '\u0644\u0633\u0647 \u0645\u0641\u064a\u0634 \u062d\u0627\u062c\u0629.',
+    'Call payment': '\u0645\u0643\u0627\u0644\u0645\u0629',
+    'Active driver': '\u0645\u0646\u062f\u0648\u0628 \u0623\u0643\u062a\u064a\u0641',
+    'Bonus': '\u0628\u0648\u0646\u0635',
+    'Payout': '\u0635\u0631\u0641',
+    'Correction': '\u062a\u0635\u062d\u064a\u062d',
+    'Write an amount.': '\u0627\u0643\u062a\u0628\u064a \u0627\u0644\u0645\u0628\u0644\u063a.',
+    'You already have an open request.': '\u0639\u0646\u062f\u0643 \u0637\u0644\u0628 \u0645\u0641\u062a\u0648\u062d \u0644\u0633\u0647.',
+    'There is no confirmed money to ask for yet.': '\u0644\u0633\u0647 \u0645\u0641\u064a\u0634 \u0641\u0644\u0648\u0633 \u0645\u0636\u0645\u0648\u0646\u0629 \u062a\u0637\u0644\u0628\u064a \u0645\u0646\u0647\u0627 \u0633\u0644\u0641\u0629.',
     'Welcome': '\u0623\u0647\u0644\u0627\u064b \u0628\u064a\u0643\u064a',
     'Access code': '\u0643\u0648\u062f \u0627\u0644\u062f\u062e\u0648\u0644',
     'Open': '\u0641\u062a\u062d',
@@ -588,6 +647,9 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
   };
   // texts with numbers or names inside
   var AR_RE = [
+    [/^The most you can ask now is (\d+)\.$/, function (m) { return '\u0623\u0642\u0635\u0649 \u0645\u0628\u0644\u063a \u062a\u0642\u062f\u0631\u064a \u062a\u0637\u0644\u0628\u064a\u0647 \u062f\u0644\u0648\u0642\u062a\u064a ' + m[1] + ' \u062c\u0646\u064a\u0647.'; }],
+    [/^Last request: (\d+) EGP - (.+)$/, function (m) { return '\u0622\u062e\u0631 \u0637\u0644\u0628: ' + m[1] + ' \u062c\u0646\u064a\u0647 - ' + T(m[2]); }],
+    [/^Your request: (\d+) EGP - (.+)$/, function (m) { return '\u0637\u0644\u0628\u0643: ' + m[1] + ' \u062c\u0646\u064a\u0647 - ' + T(m[2]); }],
     [/^(.+\.\.\.) (\d+) s$/, function (m) { return T(m[1]) + ' ' + m[2] + ' \u062b'; }],
     [/^9 hours - automatic for (.+)$/, function (m) { return '9 \u0633\u0627\u0639\u0627\u062a - \u062a\u0644\u0642\u0627\u0626\u064a \u0644\u0640 ' + T(m[1]); }],
     [/^5 hours - (.*)$/, function (m) { return T('5 hours - ') + T(m[1]); }],
@@ -1723,8 +1785,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
   function setTab(t) {
     TAB = t;
     $('lv').classList.toggle('show', t === 'leads');
-    $('tabL').className = t === 'leads' ? 'on' : '';
-    $('tabD').className = t === 'driver' ? 'on' : '';
+    paintTabs();
     $('steps').hidden = t === 'leads';
     paintHeader();
     if (t === 'leads') {
@@ -1736,8 +1797,70 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     }
   }
   function tabCount() { $('tabL').textContent = T('Leads') + (L.pin && L.leads.length ? ' (' + L.leads.length + ')' : ''); }
-  $('tabL').onclick = function () { if (TAB !== 'leads') setTab('leads'); };
+  function paintTabs() {
+    var w = TAB === 'leads' && L.pane === 'wallet';
+    $('tabL').className = TAB === 'leads' && !w ? 'on' : '';
+    $('tabW').className = w ? 'on' : '';
+    $('tabD').className = TAB === 'driver' ? 'on' : '';
+  }
+  $('tabL').onclick = function () { var was = L.pane; L.pane = ''; if (TAB !== 'leads') setTab('leads'); else if (was === 'wallet') { paintTabs(); leadsEnter(); } };
+  $('tabW').onclick = function () { var was = L.pane; L.pane = 'wallet'; if (TAB !== 'leads') setTab('leads'); else if (was !== 'wallet') { paintTabs(); leadsEnter(); } };
   $('tabD').onclick = function () { if (TAB !== 'driver') setTab('driver'); };
+
+  // ---- the wallet ----
+  function money(n) { return T('{n} EGP', { n: String(Math.round(+n || 0)) }); }
+  var WTYPE = { Call: 'Call payment', Active: 'Active driver', Bonus: 'Bonus', Advance: 'Advance', Payout: 'Payout', Reversal: 'Correction' };
+  var WSTAT = { Pending: 'Not confirmed', Confirmed: 'Confirmed', Paid: 'Paid out', Cancelled: 'Cancelled' };
+  var WREQ = { Pending: 'Waiting for the manager', Approved: 'Approved. The manager will pay it.', Paid: 'The advance was paid.', Rejected: 'Not approved' };
+  function paintWallet(w) {
+    $('wtoday').textContent = money(w.today);
+    $('wmonth').textContent = T('This month: {n} EGP', { n: String(Math.round(w.month)) });
+    $('wconf').textContent = money(w.confirmed);
+    $('wpend').textContent = money(w.pending);
+    $('wpaid').textContent = money(w.paid);
+    var a = w.advance || {}, note = '';
+    if (a.open) note = T('Your request: {a} EGP - {s}', { a: a.amount === undefined ? a.open.amount : a.open.amount, s: WREQ[a.open.status] || a.open.status });
+    else if (a.max > 0) note = T('You can ask up to {n} EGP now.', { n: a.max });
+    else note = T('No confirmed money to ask for yet.');
+    if (!a.open && a.last) note += '\n' + T('Last request: {a} EGP - {s}', { a: a.last.amount, s: WREQ[a.last.status] || a.last.status });
+    $('wadvnote').style.whiteSpace = 'pre-line';
+    $('wadvnote').textContent = note;
+    $('wask').hidden = !!a.open || !(a.max > 0);
+    var box = $('wlistd');
+    box.textContent = '';
+    (w.entries || []).forEach(function (e) {
+      var row = el('div', 'lcard went' + (e.status === 'Cancelled' ? ' cx' : ''));
+      var l = el('div');
+      l.appendChild(el('b', '', T(WTYPE[e.type] || e.type)));
+      var sm = el('small');
+      var lab = el('span', '', e.label || ''); lab.setAttribute('data-raw', '1');
+      sm.appendChild(lab); sm.appendChild(document.createTextNode((e.label ? ' \u00b7 ' : '') + e.time));
+      l.appendChild(sm);
+      var r = el('div', 'r');
+      r.appendChild(el('b', '', (e.amount > 0 ? '+' : '') + money(e.amount)));
+      r.appendChild(el('span', 'chip', T(WSTAT[e.status] || e.status)));
+      row.appendChild(l); row.appendChild(r);
+      box.appendChild(row);
+    });
+    $('wempty').hidden = !!(w.entries && w.entries.length);
+  }
+  function walletRefresh() {
+    if (!L.on || !L.pin) return Promise.resolve();
+    return lapi({ action: 'wallet', pin: L.pin }).then(function (j) { say('wwerr', ''); paintWallet(j.wallet); }).catch(function (err) {
+      if (err.bad && /code|pin/i.test(err.message)) { leadsLogout(); say('lgerr', T('Wrong code')); return; }
+      say('wwerr', TS(err.message));
+    });
+  }
+  var wBusy = false;
+  $('wsend').onclick = function () {
+    if (wBusy) return;
+    var a = parseInt($('wamt').value, 10);
+    if (!(a > 0)) { say('wwerr', 'Write an amount.'); return; }
+    wBusy = true; say('wwerr', '');
+    lapi({ action: 'advance', pin: L.pin, amount: a }).then(function (j) {
+      wBusy = false; $('wamt').value = ''; paintWallet(j.wallet); toast(T('Your request was sent.'));
+    }).catch(function (err) { wBusy = false; say('wwerr', TS(err.message)); walletRefresh(); });
+  };
 
   // ---- the code ----
   function pinBoxes() { return Array.prototype.slice.call(document.querySelectorAll('#lpin input')); }
@@ -1793,12 +1916,13 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
 
   // ---- what shows in the Leads tab ----
   function leadsPane(name) {
-    ['lgate', 'lmain', 'lwho'].forEach(function (x) { $(x).hidden = x !== name; });
+    ['lgate', 'lmain', 'lwho', 'lwal'].forEach(function (x) { $(x).hidden = x !== name; });
     window.scrollTo(0, 0);
   }
   function leadsEnter() {
     if (!L.pin) { leadsPane('lgate'); return; }
     if (L.wantWho) { openWho(); return; }
+    if (L.pane === 'wallet') { leadsPane('lwal'); walletRefresh(); return; }
     leadsPane('lmain');
     notifyInit();
     leadsRefresh();
