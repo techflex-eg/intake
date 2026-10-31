@@ -225,12 +225,168 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
 .went .r { text-align: end; }
 .went .r b { display: block; font-size: 17px; }
 .went.cx { opacity: .5; }
+/* v89: the work screen: the switch, the tiles (= the states of a card), Start here, the panel after a call */
+.onrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; margin-bottom: 12px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+.onrow .l { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.onrow .dot { width: 12px; height: 12px; border-radius: 50%; background: #2ecc71; box-shadow: 0 0 0 4px rgba(46,204,113,.2); flex: none; }
+.onrow.off .dot { background: #6b7785; box-shadow: 0 0 0 4px rgba(107,119,133,.2); }
+.onrow.arm { border-color: var(--bad); }
+.onrow.arm .dot { background: var(--bad); box-shadow: 0 0 0 4px rgba(229,57,53,.2); }
+.onrow.busy { opacity: .55; pointer-events: none; }
+.onrow b { display: block; font-size: 15px; }
+.onrow small { display: block; color: var(--muted); font-size: 12px; }
+.sw { width: 54px; height: 30px; border-radius: 99px; background: #1e8e5a; position: relative; flex: none; transition: background .15s; }
+.sw::after { content: ""; position: absolute; top: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; inset-inline-end: 3px; }
+.sw.off { background: #8a95a3; }
+.sw.off::after { inset-inline-end: auto; inset-inline-start: 3px; }
+:root[data-theme="dark"] .sw.off { background: #3a4552; }
+.prog { display: flex; align-items: center; gap: 10px; margin: 0 2px 12px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.prog .pbar { flex: 1; margin: 0; }
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 12px; }
+.tile { font: inherit; color: var(--ink); background: var(--card); border: 2px solid var(--line); border-top: 4px solid var(--c); border-radius: 14px; padding: 10px 4px 8px; text-align: center; position: relative; cursor: pointer; }
+.tile .n { display: block; font-size: 26px; font-weight: 800; line-height: 1; }
+.tile .t { font-size: 13px; font-weight: 700; margin-top: 5px; }
+.tile.on { border-color: var(--c); }
+@supports (background: color-mix(in srgb, red, blue)) { .tile.on { background: color-mix(in srgb, var(--c) 20%, var(--card)); } }
+.tile.dim .n, .tile.dim .t { color: var(--muted); }
+.tile .red { position: absolute; top: -9px; inset-inline-start: -3px; background: var(--bad); color: #fff; font-size: 11px; font-weight: 800; border-radius: 99px; padding: 1px 8px; }
+.next { display: flex; align-items: center; gap: 10px; background: #fff4e5; border: 1px solid #ef6c00; border-radius: 14px; padding: 10px 12px; margin-bottom: 12px; }
+:root[data-theme="dark"] .next { background: #2d2210; }
+.next .tx { flex: 1; min-width: 0; font-size: 13px; color: var(--muted); line-height: 1.45; }
+.next .tx small { display: block; color: #b26a00; font-weight: 700; font-size: 12px; }
+:root[data-theme="dark"] .next .tx small { color: #ffb74d; }
+.next .tx b { display: block; font-size: 15px; color: var(--ink); }
+.next .btn { min-height: 42px; padding: 0 16px; background: #ef6c00; border-color: #ef6c00; color: #fff; flex: none; }
+.next.calm { background: var(--card); border-color: var(--line); }
+.next.calm .tx small { color: var(--muted); }
+.how { margin: 0 2px 10px; font-size: 13px; color: var(--muted); font-weight: 600; line-height: 1.5; }
+.how b { color: var(--ink); font-size: 15px; }
+.lsum { font-size: 13px; margin-top: 5px; color: var(--muted); }
+.lsum i { font-style: normal; color: var(--ink); font-weight: 600; }
+.lnext { margin-top: 6px; font-size: 14px; font-weight: 700; }
+.lnext.n-hot { color: #ef6c00; } .lnext.n-late { color: var(--bad); } .lnext.n-wait { color: var(--muted); } .lnext.n-ok { color: #2e7d32; } .lnext.n-no { color: var(--muted); }
+:root[data-theme="dark"] .lnext.n-ok { color: #7fe0b0; } :root[data-theme="dark"] .lnext.n-hot { color: #ffb74d; }
+.badge.red { background: var(--bad); }
+.lcard.pulse { animation: lpulse 1.6s ease-out; }
+@keyframes lpulse { 0% { box-shadow: 0 0 0 0 rgba(239,108,0,.7); } 100% { box-shadow: 0 0 0 18px rgba(239,108,0,0); } }
+.lres .lab { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin: 14px 0 6px; font-size: 14px; }
+.lres .lab:first-child { margin-top: 0; }
+.lres > .lab + textarea { border-color: var(--brand); }
+.req { color: #d32f2f; font-size: 12px; font-weight: 800; }
+:root[data-theme="dark"] .req { color: #ff8a80; }
+.dest { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dbtn { min-height: 50px; font: inherit; font-weight: 700; color: var(--ink); background: var(--bg); border: 2px solid var(--line); border-inline-start: 6px solid var(--c); border-radius: 12px; padding: 6px 8px; }
+.dbtn.on { border-color: var(--c); }
+@supports (background: color-mix(in srgb, red, blue)) { .dbtn.on { background: color-mix(in srgb, var(--c) 24%, var(--bg)); } }
+.lres .go { width: 100%; margin-top: 12px; }
+.lres .msgstep { margin-top: 0; }
+.lres .mic { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 46px; margin-top: 8px; padding: 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: inherit; font-weight: 600; font-size: 14px; cursor: pointer; }
+.lres .mic svg { width: 18px; height: 18px; flex: none; }
+.lres .mic.rec { background: var(--bad); border-color: var(--bad); color: #fff; }
+.lres .msgstep > .lab:first-child { margin-top: 14px; }
+.lres .pfoot { margin: 8px 2px 0; font-size: 12px; color: var(--muted); text-align: center; line-height: 1.5; }
+.offcard { text-align: center; padding: 34px 18px 26px; }
+.moon { width: 84px; height: 84px; border-radius: 50%; margin: 0 auto 14px; background: var(--bg); border: 3px solid var(--line); display: flex; align-items: center; justify-content: center; }
+.moon i { width: 26px; height: 26px; border-radius: 50%; background: #8a95a3; display: block; }
+.offcard h2 { margin: 0 0 8px; font-size: 22px; }
+.offcard p { margin: 0 auto 18px; color: var(--muted); max-width: 290px; font-size: 14px; line-height: 1.6; }
+.bigon { width: 100%; min-height: 62px; font-size: 20px; background: #1e8e5a; border-color: #1e8e5a; color: #fff; border-radius: 16px; }
+.mini { margin-top: 14px; font-size: 12px; color: var(--muted); }
+/* v90: the one chat inside the card */
+.toast { z-index: 60; }
+.lbtns .btn { position: relative; }
+.cdot { direction: ltr; unicode-bidi: isolate; position: absolute; top: -8px; inset-inline-end: -5px; min-width: 21px; height: 21px; padding: 0 5px; border-radius: 99px; background: #e53935; color: #fff; font-size: 11px; font-weight: 800; line-height: 21px; text-align: center; box-shadow: 0 0 0 2px var(--card); }
+.lcard.unr { border-color: #1e8e5a; box-shadow: 0 0 0 1px #1e8e5a inset; }
+body.chatopen { overflow: hidden; }
+.chatv { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 30; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); }
+.chhd { display: flex; align-items: center; gap: 10px; flex: none; background: var(--brand); color: #fff; padding: 8px 12px; padding-top: max(8px, env(safe-area-inset-top)); }
+:root[data-theme="dark"] .chhd { background: #22324a; }
+.chback { width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255,255,255,.16); color: #fff; display: flex; align-items: center; justify-content: center; flex: none; padding: 0; cursor: pointer; }
+.chback svg { width: 22px; height: 22px; }
+:root[dir="rtl"] .chback svg { transform: scaleX(-1); }
+.chwho { flex: 1; min-width: 0; }
+.chwho b { display: block; font-size: 16px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chwho small { display: inline-block; font-size: 12px; opacity: .8; direction: ltr; unicode-bidi: isolate; }
+.chadd { flex: none; min-height: 38px; padding: 0 12px; border-radius: 10px; border: 0; background: #fff; color: #1f3a5f; font-weight: 800; font-size: 13px; cursor: pointer; }
+.chwrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.chmsgs { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 12px 12px 8px; display: flex; flex-direction: column; gap: 5px; }
+.chday { align-self: center; font-size: 12px; font-weight: 700; color: var(--muted); background: var(--card); border: 1px solid var(--line); border-radius: 99px; padding: 2px 12px; margin: 8px 0 4px; }
+.chempty { position: absolute; top: 50%; left: 24px; right: 24px; transform: translateY(-50%); text-align: center; color: var(--muted); font-weight: 600; margin: 0; pointer-events: none; }
+.chnew { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: var(--brand); color: #fff; border: 0; border-radius: 99px; padding: 8px 16px; font-weight: 800; font-size: 13px; box-shadow: 0 2px 8px rgba(0,0,0,.28); cursor: pointer; }
+:root[data-theme="dark"] .chnew { background: #4a78b8; }
+.bub { max-width: 84%; padding: 7px 10px 4px; border-radius: 14px; font-size: 15px; line-height: 1.45; word-break: break-word; overflow-wrap: anywhere; box-shadow: 0 1px 1px rgba(0,0,0,.06); }
+.bub.in { align-self: flex-start; background: var(--card); border: 1px solid var(--line); border-start-start-radius: 4px; }
+.bub.out { align-self: flex-end; background: #dcf3e6; border: 1px solid #bde2cd; color: #12301f; border-end-end-radius: 4px; }
+:root[data-theme="dark"] .bub.out { background: #1c4333; border-color: #27604a; color: #e6f6ee; }
+.bub.pend { opacity: .6; }
+.bub.failed { border-color: var(--bad); }
+.bwho { font-size: 11px; font-weight: 800; color: var(--brand); margin-bottom: 2px; }
+:root[data-theme="dark"] .bwho { color: #8fb4e8; }
+.bub.out .bwho { color: #1e6a47; }
+:root[data-theme="dark"] .bub.out .bwho { color: #8fe0b5; }
+.btag { font-size: 11px; font-weight: 800; opacity: .7; margin-bottom: 2px; }
+.btxt { white-space: pre-wrap; }
+.bimg + .btxt { margin-top: 5px; }
+.bnote { font-size: 13px; color: var(--muted); font-style: italic; }
+.bmeta { display: flex; justify-content: flex-end; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); margin-top: 2px; direction: ltr; }
+.bub.out .bmeta { color: inherit; opacity: .75; }
+.tick { letter-spacing: -3px; font-weight: 800; }
+.bub.out .tick.read { color: #1e88e5; opacity: 1; }
+.tick.fail { color: var(--bad); letter-spacing: 0; }
+.bfail { font-size: 12px; font-weight: 700; color: var(--bad); margin-top: 2px; }
+.bimg { position: relative; width: 230px; max-width: 100%; aspect-ratio: 4 / 3; max-height: 340px; border-radius: 10px; overflow: hidden; background: var(--bg); cursor: pointer; }
+.bimg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bph { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--muted); text-align: center; padding: 6px; }
+.voice { display: flex; align-items: center; gap: 10px; min-width: 210px; }
+.vplay { width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; flex: none; padding: 0; cursor: pointer; }
+:root[data-theme="dark"] .vplay { background: #4a78b8; }
+.vplay.wait { opacity: .5; }
+.vplay svg { width: 20px; height: 20px; }
+.vbar { flex: 1; height: 6px; border-radius: 3px; background: rgba(0,0,0,.14); position: relative; overflow: hidden; }
+:root[data-theme="dark"] .vbar { background: rgba(255,255,255,.2); }
+.vbar i { position: absolute; top: 0; bottom: 0; inset-inline-start: 0; width: 0; background: var(--brand); border-radius: 3px; }
+.vt { font-size: 12px; color: var(--muted); min-width: 34px; text-align: end; direction: ltr; }
+.bdoc { display: flex; align-items: center; gap: 8px; width: 100%; background: rgba(0,0,0,.05); border: 0; border-radius: 10px; padding: 10px; color: inherit; font: inherit; text-align: start; text-decoration: none; cursor: pointer; flex-wrap: wrap; }
+:root[data-theme="dark"] .bdoc { background: rgba(255,255,255,.08); }
+.bdoc svg { width: 26px; height: 26px; flex: none; }
+.bdoc .bdn { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bdoc small { flex-basis: 100%; font-size: 12px; opacity: .75; }
+.chbar { flex: none; background: var(--card); border-top: 1px solid var(--line); padding: 8px 10px; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+.chnote { font-size: 13px; line-height: 1.55; color: #b26a00; font-weight: 600; padding: 2px 4px 8px; }
+:root[data-theme="dark"] .chnote { color: #ffcc80; }
+.chacts { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.chacts .btn { flex: 1; min-width: 130px; }
+.chacts .btn:not(.fill) { color: var(--ink); }
+.chrow { display: flex; gap: 8px; align-items: flex-end; }
+.chrow textarea { flex: 1; min-width: 0; min-height: 46px; max-height: 120px; resize: none; font: inherit; color: var(--ink); background: var(--bg); border: 2px solid var(--line); border-radius: 23px; padding: 10px 16px; line-height: 1.35; }
+.chrow textarea:focus { outline: none; border-color: var(--brand); }
+.chsend { width: 46px; height: 46px; border-radius: 50%; border: 0; background: #1e8e5a; color: #fff; display: flex; align-items: center; justify-content: center; flex: none; padding: 0; cursor: pointer; }
+.chsend[disabled] { opacity: .45; }
+.chsend svg { width: 22px; height: 22px; }
+:root[dir="rtl"] .chsend svg { transform: scaleX(-1); }
+.chbar .err { margin: 4px 4px 0; font-size: 13px; }
+.chbar .err:empty { display: none; }
+.imgv { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 50; background: rgba(0,0,0,.94); display: flex; align-items: center; justify-content: center; padding: 12px; }
+.imgv img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.imgx { position: absolute; top: max(10px, env(safe-area-inset-top)); inset-inline-end: 12px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255,255,255,.18); color: #fff; font-size: 28px; line-height: 1; cursor: pointer; }
+.pkbody { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 14px 8px; }
+.pkgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; direction: ltr; }
+.pth { position: relative; aspect-ratio: 1; padding: 0; border: 3px solid transparent; border-radius: 12px; overflow: hidden; background: var(--card); cursor: pointer; }
+.pth img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: .45; }
+.pth .pck { position: absolute; top: 6px; left: 6px; width: 26px; height: 26px; border-radius: 50%; background: rgba(0,0,0,.45); border: 2px solid #fff; color: transparent; font-size: 16px; font-weight: 800; line-height: 22px; text-align: center; }
+.pth.on { border-color: #1e8e5a; }
+.pth.on img { opacity: 1; }
+.pth.on .pck { background: #1e8e5a; color: #fff; }
+.pkbar { display: flex; flex-direction: column; gap: 4px; }
+.pkbar .btn { width: 100%; min-height: 54px; font-size: 17px; background: #1e8e5a; border-color: #1e8e5a; color: #fff; }
+.pkbar .btn[disabled] { opacity: .45; }
+.pkbar .link { align-self: center; }
 </style>
 </head>
 <body>
 <header>
   <div class="hrow">
-    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v88</span></div></div>
+    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v90</span></div></div>
     <div class="hbtns"><button type="button" class="hb" id="lang" aria-label="Language"></button><button type="button" class="hb" id="theme" aria-label="Day or night"></button><button type="button" class="hb" id="out" hidden>Sign out</button></div>
   </div>
     <div id="tabs" hidden><button type="button" id="tabL" class="on">Leads</button><button type="button" id="tabD">New driver</button><button type="button" id="tabW">My wallet</button></div>
@@ -328,26 +484,31 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
       <div class="bar"><div class="in"><button class="btn fill" id="lstart" type="button">Start</button></div></div>
     </div>
     <div id="lmain" hidden>
-      <div class="card">
-        <div class="note" style="margin:0 0 6px">Your work today</div>
-        <div id="lgoalbox" hidden>
-          <div class="bignum" id="ldone">0%</div>
-          <div class="pbar"><i id="lgoalbar"></i></div>
-          <div class="note" id="lgoaltext" style="margin-top:4px"></div>
-        </div>
-        <div class="note" id="lwaittext" hidden style="margin-top:4px;font-weight:600"></div>
+      <div class="onrow" id="onrow" role="switch" aria-checked="true" tabindex="0">
+        <div class="l"><span class="dot"></span><div><b id="onttl">I'm working</b><small id="onsub">New drivers and notifications reach you</small></div></div>
+        <span class="sw" id="onsw"></span>
       </div>
       <button class="btn small" id="lnotify" type="button" hidden style="margin-bottom:12px">Turn on notifications</button>
+      <p class="note err" id="lnblock" hidden>Notifications are blocked. Allow them in the phone settings.</p>
       <p class="note err" id="lerr"></p>
-      <div class="seg lfilter" id="lfilter" hidden></div>
-      <p class="note" id="lduetext" hidden style="font-weight:700;color:#ef6c00"></p>
-      <h3 class="sec" id="lh1" hidden>Call now</h3>
-      <div id="llist"></div>
-      <h3 class="sec" id="lh2" hidden>Waiting for their data</h3>
-      <div id="wlist"></div>
-      <div id="xlist"></div>
-      <p class="note" id="xempty" hidden style="text-align:center;padding:24px 0">Nothing here yet.</p>
-      <p class="note" id="lempty" hidden style="text-align:center;font-weight:600;padding:24px 0">All done. Great work.</p>
+      <div id="lon">
+        <div class="prog" id="lprog" hidden><span id="lgoaltext"></span><div class="pbar"><i id="lgoalbar"></i></div><span id="ldone">0%</span></div>
+        <div class="tiles" id="ltiles"></div>
+        <div class="next" id="lnext" hidden>
+          <div class="tx"><small id="lnwhy"></small><b id="lnname" dir="auto" data-raw="1"></b><span id="lnline"></span></div>
+          <button class="btn" id="lnopen" type="button">Open the card</button>
+        </div>
+        <div class="how" id="lhow"></div>
+        <div id="llist"></div>
+        <p class="note" id="lempty" hidden style="text-align:center;font-weight:600;padding:24px 0"></p>
+      </div>
+      <div class="card offcard" id="loff" hidden>
+        <div class="moon"><i></i></div>
+        <h2>You are not working now</h2>
+        <p>When you press Start work, new drivers reach you and notifications work.</p>
+        <button class="btn bigon" id="lstartwork" type="button">Start work</button>
+        <div class="mini" id="loffnote"></div>
+      </div>
     </div>
     <div id="lwal" hidden>
       <div class="card">
@@ -378,6 +539,45 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     </div>
   </section>
 </main>
+<div class="chatv" id="chatv" hidden role="dialog" aria-modal="true">
+  <div class="chhd">
+    <button class="chback" id="chback" type="button" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <div class="chwho"><b id="chname" data-raw="1"></b><small id="chphone" dir="ltr" data-raw="1"></small></div>
+    <button class="chadd" id="chadd" type="button">Add driver</button>
+  </div>
+  <div class="chwrap">
+    <div class="chmsgs" id="chmsgs"></div>
+    <p class="chempty" id="chempty" hidden>No messages yet.</p>
+    <button class="chnew" id="chnew" type="button" hidden>New messages</button>
+  </div>
+  <div class="chbar">
+    <div class="chnote" id="chnote" hidden></div>
+    <div class="chacts" id="chacts" hidden></div>
+    <div class="chrow" id="chrow">
+      <textarea id="chtext" rows="1" maxlength="1000" dir="auto" placeholder="Write a message..." aria-label="Message"></textarea>
+      <button class="chsend" id="chsend" type="button" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4z"></path></svg></button>
+    </div>
+    <p class="note err" id="cherr"></p>
+  </div>
+</div>
+<div class="chatv" id="pickv" hidden role="dialog" aria-modal="true">
+  <div class="chhd">
+    <button class="chback" id="pkback" type="button" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+    <div class="chwho"><b>Choose the photos of the documents</b></div>
+  </div>
+  <div class="pkbody">
+    <p class="note" id="pkhint" hidden style="margin-top:0">Tap a photo to add it or remove it.</p>
+    <p class="note" id="pkload" style="margin-top:0">Loading photos...</p>
+    <div class="pkgrid" id="pkgrid"></div>
+    <p class="note" id="pkempty" hidden style="text-align:center;padding:24px 0"></p>
+    <p class="note err" id="pkerr"></p>
+  </div>
+  <div class="chbar pkbar">
+    <button class="btn fill" id="pkgo" type="button">Add driver</button>
+    <button class="link" id="pkphone" type="button">Pick from the phone</button>
+  </div>
+</div>
+<div class="imgv" id="imgv" hidden><button class="imgx" id="imgx" type="button" aria-label="Close">&times;</button><img id="imgbig" alt=""></div>
 <div class="toast" id="toast" role="status"></div>
 
 <script src="config.js"></script>
@@ -423,13 +623,54 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
   // The checks of the page work on the English texts: only the place where a text is shown calls T().
   var LANG = String(store('intakeLang') || CFG.lang || 'ar') === 'en' ? 'en' : 'ar';
   var AR = {
+    'Chat': '\u0627\u0644\u0634\u0627\u062a',
+    'Send and save': '\u0627\u0628\u0639\u062a\u064a \u0648\u0627\u062d\u0641\u0638\u064a',
+    'Ready message sent': '\u0627\u062a\u0628\u0639\u062a\u062a \u0631\u0633\u0627\u0644\u0629 \u062c\u0627\u0647\u0632\u0629',
+    'The chat could not send it. WhatsApp opens: send the message from your phone.': '\u0627\u0644\u0634\u0627\u062a \u0645\u0627\u0642\u062f\u0631\u0634 \u064a\u0628\u0639\u062a\u0647\u0627. \u0647\u0646\u0641\u062a\u062d\u0644\u0643 \u0627\u0644\u0648\u0627\u062a\u0633\u0627\u0628: \u0627\u0628\u0639\u062a\u064a \u0627\u0644\u0631\u0633\u0627\u0644\u0629 \u0645\u0646 \u062a\u0644\u064a\u0641\u0648\u0646\u0643.',
+    'Auto message': '\u0631\u0633\u0627\u0644\u0629 \u062a\u0644\u0642\u0627\u0626\u064a\u0629',
+    'WhatsApp did not open. Press Open WhatsApp again.': '\u0627\u0644\u0648\u0627\u062a\u0633\u0627\u0628 \u0645\u0627\u062a\u0641\u062a\u062d\u0634. \u0627\u0636\u063a\u0637\u064a \u00ab\u0627\u0641\u062a\u062d\u064a \u0627\u0644\u0648\u0627\u062a\u0633\u0627\u0628\u00bb \u062a\u0627\u0646\u064a.',
+    'Voice note': '\u0631\u0633\u0627\u0644\u0629 \u0635\u0648\u062a\u064a\u0629',
+    'Document': '\u0645\u0633\u062a\u0646\u062f',
+    'Video': '\u0641\u064a\u062f\u064a\u0648',
+    'Location': '\u0644\u0648\u0643\u064a\u0634\u0646',
+    'Sticker': '\u0645\u0644\u0635\u0642',
+    'Message': '\u0631\u0633\u0627\u0644\u0629',
+    'Auto': '\u062a\u0644\u0642\u0627\u0626\u064a',
+    'Shared from your phone': '\u0645\u0646 \u062a\u0644\u064a\u0641\u0648\u0646\u0643',
+    'Did not arrive': '\u0645\u0627\u0648\u0635\u0644\u062a\u0634',
+    'Ready message': '\u0631\u0633\u0627\u0644\u0629 \u062c\u0627\u0647\u0632\u0629',
+    'Tap to try again': '\u0627\u0636\u063a\u0637\u064a \u0639\u0644\u0634\u0627\u0646 \u062a\u062d\u0627\u0648\u0644\u064a \u062a\u0627\u0646\u064a',
+    'The photo is not available.': '\u0627\u0644\u0635\u0648\u0631\u0629 \u0645\u0634 \u0645\u062a\u0627\u062d\u0629.',
+    'The file is not available.': '\u0627\u0644\u0645\u0644\u0641 \u0645\u0634 \u0645\u062a\u0627\u062d.',
+    'This voice note cannot be played on this phone.': '\u0627\u0644\u0631\u0633\u0627\u0644\u0629 \u0627\u0644\u0635\u0648\u062a\u064a\u0629 \u062f\u064a \u0645\u0634 \u0628\u062a\u0634\u062a\u063a\u0644 \u0639\u0644\u0649 \u0627\u0644\u062a\u0644\u064a\u0641\u0648\u0646 \u062f\u0647.',
+    'Open on the map': '\u0627\u0641\u062a\u062d\u064a \u0639\u0644\u0649 \u0627\u0644\u062e\u0631\u064a\u0637\u0629',
+    'it cannot be shown here': '\u0645\u0634 \u0628\u064a\u0638\u0647\u0631 \u0647\u0646\u0627',
+    'Open WhatsApp': '\u0627\u0641\u062a\u062d\u064a \u0627\u0644\u0648\u0627\u062a\u0633\u0627\u0628',
+    'Send the ready reminder': '\u0627\u0628\u0639\u062a\u064a \u0627\u0644\u062a\u0630\u0643\u064a\u0631 \u0627\u0644\u062c\u0627\u0647\u0632',
+    'The chat is not connected now. Use WhatsApp.': '\u0627\u0644\u0634\u0627\u062a \u0645\u0634 \u0645\u062a\u0648\u0635\u0644 \u062f\u0644\u0648\u0642\u062a\u064a. \u0627\u0633\u062a\u062e\u062f\u0645\u064a \u0627\u0644\u0648\u0627\u062a\u0633\u0627\u0628.',
+    'He asked to stop messages. Do not write to him.': '\u0637\u0644\u0628 \u0625\u0646\u0646\u0627 \u0646\u0648\u0642\u0641 \u0627\u0644\u0631\u0633\u0627\u064a\u0644. \u0645\u0627\u062a\u0643\u062a\u0628\u064a\u0644\u0648\u0634.',
+    'More than 24 hours passed since he wrote. A free message cannot be sent now.': '\u0639\u062f\u0651\u0649 \u0623\u0643\u062a\u0631 \u0645\u0646 24 \u0633\u0627\u0639\u0629 \u0645\u0646 \u0622\u062e\u0631 \u0631\u0633\u0627\u0644\u0629 \u0645\u0646\u0647. \u0645\u064a\u0646\u0641\u0639\u0634 \u062a\u0628\u0639\u062a\u064a \u0631\u0633\u0627\u0644\u0629 \u0639\u0627\u062f\u064a\u0629 \u062f\u0644\u0648\u0642\u062a\u064a.',
+    'The daily limit of messages is over. Use WhatsApp.': '\u0639\u062f\u062f \u0627\u0644\u0631\u0633\u0627\u064a\u0644 \u0627\u0644\u0645\u0633\u0645\u0648\u062d \u0627\u0644\u0646\u0647\u0627\u0631\u062f\u0647 \u062e\u0644\u0635. \u0627\u0633\u062a\u062e\u062f\u0645\u064a \u0627\u0644\u0648\u0627\u062a\u0633\u0627\u0628.',
+    'The message did not go. Try again or use WhatsApp.': '\u0627\u0644\u0631\u0633\u0627\u0644\u0629 \u0645\u0627\u0631\u0648\u062d\u062a\u0634. \u062c\u0631\u0651\u0628\u064a \u062a\u0627\u0646\u064a \u0623\u0648 \u0627\u0633\u062a\u062e\u062f\u0645\u064a \u0627\u0644\u0648\u0627\u062a\u0633\u0627\u0628.',
+    'The phone number is not right.': '\u0631\u0642\u0645 \u0627\u0644\u062a\u0644\u064a\u0641\u0648\u0646 \u0645\u0634 \u0645\u0638\u0628\u0648\u0637.',
+    'This driver is not yours any more.': '\u0627\u0644\u0645\u0646\u062f\u0648\u0628 \u062f\u0647 \u0645\u0628\u0642\u0627\u0634 \u0645\u0639\u0627\u0643\u064a.',
+    'Write a message...': '\u0627\u0643\u062a\u0628\u064a \u0631\u0633\u0627\u0644\u0629...',
+    'No messages yet.': '\u0644\u0633\u0647 \u0645\u0641\u064a\u0634 \u0631\u0633\u0627\u064a\u0644.',
+    'New messages': '\u0631\u0633\u0627\u064a\u0644 \u062c\u062f\u064a\u062f\u0629',
+    'Choose the photos of the documents': '\u0627\u062e\u062a\u0627\u0631\u064a \u0635\u0648\u0631 \u0627\u0644\u0623\u0648\u0631\u0627\u0642',
+    'Tap a photo to add it or remove it.': '\u0627\u0636\u063a\u0637\u064a \u0639\u0644\u0649 \u0627\u0644\u0635\u0648\u0631\u0629 \u0639\u0644\u0634\u0627\u0646 \u062a\u0636\u064a\u0641\u064a\u0647\u0627 \u0623\u0648 \u062a\u0634\u064a\u0644\u064a\u0647\u0627.',
+    'No photos in the chat. Photos stay in the chat for 7 days.': '\u0645\u0641\u064a\u0634 \u0635\u0648\u0631 \u0641\u064a \u0627\u0644\u0634\u0627\u062a. \u0627\u0644\u0635\u0648\u0631 \u0628\u062a\u0641\u0636\u0644 \u0641\u064a \u0627\u0644\u0634\u0627\u062a 7 \u0623\u064a\u0627\u0645.',
+    'You can add up to {n} photos.': '\u062a\u0642\u062f\u0631\u064a \u062a\u0636\u064a\u0641\u064a \u0644\u062d\u062f {n} \u0635\u0648\u0631.',
+    'Add driver ({n})': '\u0633\u062c\u0651\u0644\u064a \u0628\u064a\u0627\u0646\u0627\u062a\u0647 ({n})',
+    'Pick from the phone': '\u0627\u062e\u062a\u0627\u0631\u064a \u0645\u0646 \u0627\u0644\u062a\u0644\u064a\u0641\u0648\u0646',
+    'Send': '\u0627\u0628\u0639\u062a\u064a',
     'Intake': '\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u0645\u0646\u0627\u062f\u064a\u0628',
     'Office X': '\u0627\u0648\u0641\u064a\u0633 X',
     'My wallet': '\u0645\u062d\u0641\u0638\u062a\u064a',
     'Call summary': '\u0645\u0644\u062e\u0635 \u0627\u0644\u0645\u0643\u0627\u0644\u0645\u0629',
     'What happened in the call? Speak or write.': '\u0625\u064a\u0647 \u0627\u0644\u0644\u064a \u062d\u0635\u0644 \u0641\u064a \u0627\u0644\u0645\u0643\u0627\u0644\u0645\u0629\u061f \u0627\u062a\u0643\u0644\u0645\u064a \u0623\u0648 \u0627\u0643\u062a\u0628\u064a.',
-    'Speak': '\u1f3a4 \u0633\u062c\u0651\u0644\u064a \u0635\u0648\u062a',
-    'Stop': '\u23f9 \u0648\u0642\u0651\u0641\u064a',
+    'Speak instead of typing': '\u0627\u062a\u0643\u0644\u0645\u064a \u0628\u062f\u0644 \u0645\u0627 \u062a\u0643\u062a\u0628\u064a',
+    'Stop': '\u0648\u0642\u0651\u0641\u064a',
     'Voice is not available. Use the microphone of the keyboard.': '\u0627\u0644\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u0635\u0648\u062a\u064a \u0645\u0634 \u0634\u063a\u0627\u0644. \u0627\u0633\u062a\u062e\u062f\u0645\u064a \u0627\u0644\u0645\u0627\u064a\u0643 \u0627\u0644\u0644\u064a \u0641\u064a \u0627\u0644\u0643\u064a\u0628\u0648\u0631\u062f.',
     'Later': '\u0628\u0639\u062f\u064a\u0646',
     'Registered drivers': '\u0627\u062a\u0633\u062c\u0651\u0644\u0648\u0627',
@@ -487,6 +728,12 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     'Your request was sent.': '\u0627\u0644\u0637\u0644\u0628 \u0627\u062a\u0628\u0639\u062a.',
     'Details': '\u0627\u0644\u062a\u0641\u0627\u0635\u064a\u0644',
     'Nothing here yet.': '\u0644\u0633\u0647 \u0645\u0641\u064a\u0634 \u062d\u0627\u062c\u0629.',
+    'No one is waiting for data. A driver who promises to send his data shows here.': '\u0645\u0641\u064a\u0634 \u062d\u062f \u0645\u0633\u062a\u0646\u064a \u0628\u064a\u0627\u0646\u0627\u062a. \u0627\u0644\u0645\u0646\u062f\u0648\u0628 \u0627\u0644\u0644\u064a \u064a\u0648\u0639\u062f \u064a\u0628\u0639\u062a \u0628\u064a\u0627\u0646\u0627\u062a\u0647 \u0647\u064a\u0638\u0647\u0631 \u0647\u0646\u0627.',
+    'No postponed calls. A driver who asks for a later call shows here.': '\u0645\u0641\u064a\u0634 \u0645\u0643\u0627\u0644\u0645\u0627\u062a \u0645\u062a\u0623\u062c\u0644\u0629. \u0627\u0644\u0645\u0646\u062f\u0648\u0628 \u0627\u0644\u0644\u064a \u064a\u0637\u0644\u0628 \u0645\u0643\u0627\u0644\u0645\u0629 \u0628\u0639\u062f\u064a\u0646 \u0647\u064a\u0638\u0647\u0631 \u0647\u0646\u0627.',
+    'No unanswered calls. A driver who does not answer shows here.': '\u0645\u0641\u064a\u0634 \u0645\u0646\u062f\u0648\u0628\u064a\u0646 \u0645\u0631\u062f\u0648\u0634. \u0627\u0644\u0645\u0646\u062f\u0648\u0628 \u0627\u0644\u0644\u064a \u0645\u0627\u064a\u0631\u062f\u0634 \u0647\u064a\u0638\u0647\u0631 \u0647\u0646\u0627.',
+    'No registered drivers yet. A driver you add shows here.': '\u0644\u0633\u0647 \u0645\u0641\u064a\u0634 \u0645\u0646\u0627\u062f\u064a\u0628 \u0627\u062a\u0633\u062c\u0651\u0644\u0648\u0627. \u0627\u0644\u0645\u0646\u062f\u0648\u0628 \u0627\u0644\u0644\u064a \u062a\u0633\u062c\u0651\u0644\u064a\u0647 \u0647\u064a\u0638\u0647\u0631 \u0647\u0646\u0627.',
+    'No closed drivers.': '\u0645\u0641\u064a\u0634 \u0645\u0646\u0627\u062f\u064a\u0628 \u0627\u062a\u0642\u0641\u0644\u0648\u0627.',
+    'After saving, the card goes to the "{tab}" tab by itself.': '\u0628\u0639\u062f \u0627\u0644\u062d\u0641\u0638 \u0627\u0644\u0643\u0627\u0631\u062a \u0628\u064a\u0631\u0648\u062d \u062a\u0627\u0628 \u00ab{tab}\u00bb \u0644\u0648\u062d\u062f\u0647.',
     'Call payment': '\u0645\u0643\u0627\u0644\u0645\u0629',
     'Active driver': '\u0645\u0646\u062f\u0648\u0628 \u0623\u0643\u062a\u064a\u0641',
     'Bonus': '\u0628\u0648\u0646\u0635',
@@ -690,7 +937,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     'Call summary': '\u0645\u0644\u062e\u0635 \u0627\u0644\u0645\u0643\u0627\u0644\u0645\u0629',
     'Write what happened in the call': '\u0627\u0643\u062a\u0628\u064a \u0627\u0644\u0644\u064a \u062d\u0635\u0644 \u0641\u064a \u0627\u0644\u0645\u0643\u0627\u0644\u0645\u0629',
     'No Answer': '\u0645\u0627\u0631\u062f\u0634',
-    'Postponed': '\u0623\u062c\u0651\u0644\u064a',
+    'Postponed': '\u0645\u062a\u0623\u062c\u0644',
     'Not Interested': '\u0645\u0634 \u0645\u0647\u062a\u0645',
     'Tomorrow': '\u0628\u0643\u0631\u0629',
     'In 2 days': '\u0628\u0639\u062f \u064a\u0648\u0645\u064a\u0646',
@@ -703,6 +950,67 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     'Who are these photos for?': '\u0627\u0644\u0635\u0648\u0631 \u062f\u064a \u0644\u0645\u064a\u0646\u061f',
     'Other driver (not in my list)': '\u0645\u0646\u062f\u0648\u0628 \u062a\u0627\u0646\u064a (\u0645\u0634 \u0641\u064a \u0627\u0644\u0642\u0627\u064a\u0645\u0629)',
     ' - you called this one last': ' - \u0622\u062e\u0631 \u0648\u0627\u062d\u062f \u0643\u0644\u0645\u062a\u064a\u0647',
+    // v89: the work screen (the switch, the tabs = the states of a card, Start here, the call panel)
+    "I'm working": '\u0623\u0646\u0627 \u0634\u063a\u0651\u0627\u0644\u0629',
+    "I'm not working": '\u0623\u0646\u0627 \u0645\u0634 \u0634\u063a\u0651\u0627\u0644\u0629',
+    'New drivers and notifications reach you': '\u0628\u064a\u0648\u0635\u0644\u0643 \u0645\u0646\u0627\u062f\u064a\u0628 \u062c\u062f\u0627\u062f \u0648\u0625\u0634\u0639\u0627\u0631\u0627\u062a',
+    'No new drivers and no notifications': '\u0645\u0641\u064a\u0634 \u0645\u0646\u0627\u062f\u064a\u0628 \u062c\u062f\u0627\u062f \u0648\u0644\u0627 \u0625\u0634\u0639\u0627\u0631\u0627\u062a',
+    'Tap again to stop working': '\u0627\u0636\u063a\u0637\u064a \u062a\u0627\u0646\u064a \u0639\u0634\u0627\u0646 \u062a\u0642\u0641\u0644\u064a \u0627\u0644\u0634\u063a\u0644',
+    'Your untouched cards go to the other girls': '\u0627\u0644\u0643\u0631\u0648\u062a \u0627\u0644\u0644\u064a \u0645\u0627\u062a\u0641\u062a\u062d\u062a\u0634 \u0647\u062a\u0631\u0648\u062d \u0644\u0632\u0645\u064a\u0644\u0627\u062a\u0643',
+    'You are not working now': '\u0625\u0646\u062a\u064a \u0645\u0634 \u0634\u063a\u0651\u0627\u0644\u0629 \u062f\u0644\u0648\u0642\u062a\u064a',
+    'When you press Start work, new drivers reach you and notifications work.': '\u0644\u0645\u0627 \u062a\u062f\u0648\u0633\u064a \u00ab\u0627\u0628\u062f\u0623\u064a \u0627\u0644\u0634\u063a\u0644\u00bb \u0627\u0644\u0645\u0646\u0627\u062f\u064a\u0628 \u0627\u0644\u062c\u062f\u0627\u062f \u0647\u064a\u0628\u062f\u0623\u0648\u0627 \u064a\u0648\u0635\u0644\u0648\u0643\u064a \u0648\u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a \u0647\u062a\u0634\u062a\u063a\u0644.',
+    'Start work': '\u0627\u0628\u062f\u0623\u064a \u0627\u0644\u0634\u063a\u0644',
+    'It switches OFF by itself at {h}': '\u0628\u064a\u062a\u0642\u0641\u0644 \u0644\u0648\u062d\u062f\u0647 \u0627\u0644\u0633\u0627\u0639\u0629 {h}',
+    '{h} AM': '{h} \u0635',
+    '{h} PM': '{h} \u0645',
+    'Cards you did not open went to the other girls: {n}': '\u0627\u0644\u0643\u0631\u0648\u062a \u0627\u0644\u0644\u064a \u0645\u0627\u062a\u0641\u062a\u062d\u062a\u0634 \u0631\u0627\u062d\u062a \u0644\u0632\u0645\u064a\u0644\u0627\u062a\u0643: {n}',
+    'You were switched OFF': '\u0627\u0644\u0634\u063a\u0644 \u0627\u062a\u0642\u0641\u0644 \u0639\u0646\u062f\u0643',
+    'New drivers': '\u062c\u062f\u0627\u062f',
+    'Will send': '\u0647\u064a\u0628\u0639\u062a\u0648\u0627',
+    'Postponed drivers': '\u0645\u062a\u0623\u062c\u0644\u064a\u0646',
+    'No answer': '\u0645\u0631\u062f\u0648\u0634',
+    '{n} now': '{n} \u062f\u0644\u0648\u0642\u062a\u064a',
+    'New drivers. Call each one. After the call write what happened.': '\u0645\u0646\u0627\u062f\u064a\u0628 \u062c\u062f\u0627\u062f. \u0627\u062a\u0635\u0644\u064a \u0628\u0643\u0644 \u0648\u0627\u062d\u062f\u060c \u0648\u0628\u0639\u062f \u0627\u0644\u0645\u0643\u0627\u0644\u0645\u0629 \u0627\u0643\u062a\u0628\u064a \u0625\u064a\u0647 \u0627\u0644\u0644\u064a \u062d\u0635\u0644.',
+    'They promised to send their data. Remind them or call them and find out why not yet.': '\u0646\u0627\u0633 \u0648\u0639\u062f\u0648\u0627 \u064a\u0628\u0639\u062a\u0648\u0627 \u0628\u064a\u0627\u0646\u0627\u062a\u0647\u0645. \u0630\u0643\u0651\u0631\u064a\u0647\u0645 \u0623\u0648 \u0643\u0644\u0645\u064a\u0647\u0645 \u0648\u0627\u0639\u0631\u0641\u064a \u0644\u064a\u0647 \u0644\u0633\u0647.',
+    'They asked for a call later. Call them at the time.': '\u0646\u0627\u0633 \u0637\u0644\u0628\u0648\u0627 \u0646\u0643\u0644\u0645\u0647\u0645 \u0628\u0639\u062f\u064a\u0646. \u0643\u0644\u0645\u064a\u0647\u0645 \u0641\u064a \u0627\u0644\u0645\u064a\u0639\u0627\u062f.',
+    'They did not answer. Try again at the time (3 tries at most).': '\u0646\u0627\u0633 \u0645\u0631\u062f\u0648\u0634. \u062c\u0631\u0651\u0628\u064a \u062a\u0627\u0646\u064a \u0641\u064a \u0627\u0644\u0645\u064a\u0639\u0627\u062f (3 \u0645\u062d\u0627\u0648\u0644\u0627\u062a \u0628\u0627\u0644\u0643\u062a\u064a\u0631).',
+    'These drivers are registered. Your work with them is done.': '\u0627\u0644\u0645\u0646\u0627\u062f\u064a\u0628 \u062f\u0648\u0644 \u0627\u062a\u0633\u062c\u0644\u0648\u0627. \u0634\u063a\u0644\u0643 \u0645\u0639\u0627\u0647\u0645 \u062e\u0644\u0635 \u2713',
+    'These drivers are closed. If one writes again, he comes back as a reply.': '\u0627\u0644\u0645\u0646\u0627\u062f\u064a\u0628 \u062f\u0648\u0644 \u0627\u062a\u0642\u0641\u0644\u0648\u0627. \u0644\u0648 \u062d\u062f \u0643\u062a\u0628 \u062a\u0627\u0646\u064a \u0628\u064a\u0631\u062c\u0639\u0644\u0643 \u0643\u0640\u00ab\u0631\u062f\u0651\u00bb.',
+    'Start here': '\u0627\u0628\u062f\u0623\u064a \u0645\u0646 \u0647\u0646\u0627',
+    'Open the card': '\u0627\u0641\u062a\u062d\u064a',
+    'He replied: call him now': '\u0631\u062f \u0639\u0644\u064a\u0643\u064a \u2014 \u0643\u0644\u0645\u064a\u0647 \u062f\u0644\u0648\u0642\u062a\u064a',
+    'ask him why not yet': '\u0627\u0633\u0623\u0644\u064a\u0647 \u0644\u064a\u0647 \u0644\u0633\u0647',
+    'remind him': '\u0630\u0643\u0651\u0631\u064a\u0647',
+    'New driver: call him now': '\u0645\u0646\u062f\u0648\u0628 \u062c\u062f\u064a\u062f \u2014 \u0627\u062a\u0635\u0644\u064a \u0628\u064a\u0647 \u062f\u0644\u0648\u0642\u062a\u064a',
+    'No answer before: try again now': '\u0645\u0631\u062f\u0634 \u0642\u0628\u0644 \u0643\u062f\u0647 \u2014 \u062c\u0631\u0651\u0628\u064a \u062a\u0627\u0646\u064a \u062f\u0644\u0648\u0642\u062a\u064a',
+    'The time to call him back came': '\u062c\u0647 \u0645\u064a\u0639\u0627\u062f \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0628\u064a\u0647 \u062a\u0627\u0646\u064a',
+    'Nothing urgent now': '\u0645\u0641\u064a\u0634 \u062d\u0627\u062c\u0629 \u0645\u0633\u062a\u0639\u062c\u0644\u0629 \u062f\u0644\u0648\u0642\u062a\u064a',
+    'Late': '\u0645\u062a\u0623\u062e\u0631',
+    'Now': '\u062f\u0644\u0648\u0642\u062a\u064a',
+    'Last summary': '\u0622\u062e\u0631 \u0645\u0644\u062e\u0635',
+    'Tap the card and write what happened': '\u062f\u0648\u0633\u064a \u0639\u0644\u0649 \u0627\u0644\u0643\u0627\u0631\u062a \u0648\u0627\u0643\u062a\u0628\u064a \u0625\u064a\u0647 \u0627\u0644\u0644\u064a \u062d\u0635\u0644',
+    'Follow up {t}': '\u062a\u0627\u0628\u0639\u064a\u0647 {t}',
+    'Try again now': '\u062c\u0631\u0651\u0628\u064a \u062a\u0627\u0646\u064a \u062f\u0644\u0648\u0642\u062a\u064a',
+    'try {n} of 3': '\u0645\u062d\u0627\u0648\u0644\u0629 {n} \u0645\u0646 3',
+    'Call him back now': '\u0643\u0644\u0645\u064a\u0647 \u062f\u0644\u0648\u0642\u062a\u064a',
+    'Not interested': '\u0645\u0634 \u0645\u0647\u062a\u0645',
+    'Closed by the manager': '\u0627\u062a\u0642\u0641\u0644 \u0645\u0646 \u0627\u0644\u0645\u062f\u064a\u0631',
+    'No data after {n} days': '\u0645\u0627\u062c\u0627\u0634 \u0628\u064a\u0627\u0646\u0627\u062a \u0628\u0639\u062f {n} \u064a\u0648\u0645',
+    'No reply after {n} tries': '\u0645\u0631\u062f\u0634 \u0628\u0639\u062f {n} \u0645\u062d\u0627\u0648\u0644\u0627\u062a',
+    'What happened in the call?': '\u0625\u064a\u0647 \u0627\u0644\u0644\u064a \u062d\u0635\u0644 \u0641\u064a \u0627\u0644\u0645\u0643\u0627\u0644\u0645\u0629\u061f',
+    'Required': '\u0625\u062c\u0628\u0627\u0631\u064a',
+    'Where does the card go?': '\u0627\u0644\u0643\u0627\u0631\u062a \u064a\u0631\u0648\u062d \u0641\u064a\u0646\u061f',
+    'Will send his data': '\u0647\u064a\u0628\u0639\u062a \u0628\u064a\u0627\u0646\u0627\u062a\u0647',
+    'Did not answer': '\u0645\u0631\u062f\u0634',
+    'WhatsApp message to the driver': '\u0631\u0633\u0627\u0644\u0629 \u0627\u0644\u0648\u0627\u062a\u0633\u0627\u0628 \u0644\u0644\u0645\u0646\u062f\u0648\u0628',
+    'Send on WhatsApp and save': '\u0627\u0628\u0639\u062a\u064a \u0648\u0627\u062a\u0633\u0627\u0628 \u0648\u0627\u062d\u0641\u0638\u064a',
+    'Write what happened in the call first.': '\u0627\u0643\u062a\u0628\u064a \u0625\u064a\u0647 \u0627\u0644\u0644\u064a \u062d\u0635\u0644 \u0641\u064a \u0627\u0644\u0645\u0643\u0627\u0644\u0645\u0629 \u0627\u0644\u0623\u0648\u0644.',
+    'Write what happened in the call.': '\u0627\u0643\u062a\u0628\u064a \u0625\u064a\u0647 \u0627\u0644\u0644\u064a \u062d\u0635\u0644 \u0641\u064a \u0627\u0644\u0645\u0643\u0627\u0644\u0645\u0629.',
+    'Choose where the card goes.': '\u0627\u062e\u062a\u0627\u0631\u064a \u0627\u0644\u0643\u0627\u0631\u062a \u064a\u0631\u0648\u062d \u0641\u064a\u0646.',
+    'No new drivers now. A new driver shows here by himself.': '\u0645\u0641\u064a\u0634 \u0645\u0646\u0627\u062f\u064a\u0628 \u062c\u062f\u0627\u062f \u062f\u0644\u0648\u0642\u062a\u064a. \u0623\u0648\u0644 \u0645\u0627 \u062d\u062f \u064a\u0643\u062a\u0628 \u0647\u064a\u0638\u0647\u0631 \u0647\u0646\u0627 \u0644\u0648\u062d\u062f\u0647 \u0648\u0647\u064a\u062c\u064a\u0644\u0643 \u0625\u0634\u0639\u0627\u0631.',
+    'Notifications are blocked. Allow them in the phone settings.': '\u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a \u0645\u0642\u0641\u0648\u0644\u0629 \u0645\u0646 \u0627\u0644\u062a\u0644\u064a\u0641\u0648\u0646. \u0627\u0633\u0645\u062d\u064a \u0628\u064a\u0647\u0627 \u0645\u0646 \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u062a\u0644\u064a\u0641\u0648\u0646.',
+    'Notifications are on \u2713': '\u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a \u0627\u0634\u062a\u063a\u0644\u062a \u2713',
+    'The server is old. Tell the manager to deploy the new version.': '\u0627\u0644\u0633\u064a\u0631\u0641\u0631 \u0642\u062f\u064a\u0645. \u0643\u0644\u0645\u064a \u0627\u0644\u0645\u062f\u064a\u0631 \u064a\u062d\u062f\u0651\u062b\u0647.',
     'Hi {n}': '\u0623\u0647\u0644\u0627\u064b {n}',
     'Sign out': '\u062e\u0631\u0648\u062c',
     'Tap again to sign out': '\u0627\u0636\u063a\u0637\u064a \u062a\u0627\u0646\u064a \u0644\u0644\u062e\u0631\u0648\u062c',
@@ -1777,7 +2085,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
   // When it is empty nothing of this shows and the page works as it did before (with the access code of the manager).
   // ONE code for the whole page: the 4-digit code of the girl (the Agents tab of the Call Center sheet) opens the leads and New driver.
   var LEADS_URL = String(LEADS_API_URL || CFG.leadsUrl || '').trim();
-  var L = { on: !!LEADS_URL && !/^PASTE/.test(LEADS_URL), pin: '', agent: '', done: 0, remaining: 0, waitCount: 0, leads: [], wait: [], wa: {}, cards: {}, open: {}, pending: null, busyList: false, shared: null, wantWho: false, last: '', vapid: '', called: {}, tries: {}, waTries: {}, chatTries: {}, view: 'today', groups: { later: [], done: [], closed: [], counts: { later: 0, done: 0, closed: 0 } }, pendingChat: null, pendingRes: null, logging: false };
+  var L = { on: !!LEADS_URL && !/^PASTE/.test(LEADS_URL), waOn: false, pin: '', agent: '', duty: true, close: 22, push: -1, synced: false, loaded: false, dutyBusy: false, epoch: 0, tab: '', tabSet: false, tabs: {}, counts: {}, dueN: {}, done: 0, remaining: 0, wa: {}, cards: {}, open: {}, pending: null, busyList: false, shared: null, wantWho: false, last: '', vapid: '', called: {}, tries: {}, waTries: {}, chatTries: {}, pendingChat: null, pendingRes: null, logging: false };
   var LEADS_EVERY = CFG.leadsEvery || 30000;
   var WA_MIN_MS = CFG.waMinMs || 8000;          // she must stay in WhatsApp at least this long after she taps Send on WhatsApp (the second short try is accepted, the manager sees it as Short)
   var CALL_MIN_MS = CFG.callMinMs || 16000;      // a call shorter than this did not happen (the phone only opened and closed). In Egypt the first ring comes after 3 to 5 seconds, a driver answers after 3 or 4 rings.
@@ -1862,7 +2170,6 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
       show(S.step);
     }
   }
-  function tabCount() { $('tabL').textContent = T('Leads') + (L.pin && L.leads.length ? ' (' + L.leads.length + ')' : ''); }
   function paintTabs() {
     var w = TAB === 'leads' && L.pane === 'wallet';
     $('tabL').className = TAB === 'leads' && !w ? 'on' : '';
@@ -1956,6 +2263,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
       L.pin = pin;
       L.agent = String((j.agent && j.agent.name) || '');
       L.vapid = String(j.vapidPublicKey || '');
+      L.duty = j.duty !== false; setDutyStore(); L.tabSet = false; L.loaded = false;
       store('leadsPin', L.pin); store('leadsAgent', L.agent); store('leadsVapid', L.vapid);
       pinBoxes().forEach(function (b) { b.value = ''; });
       S.code = L.pin;                                       // the same code opens New driver
@@ -1970,8 +2278,10 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     });
   };
   function leadsLogout() {
-    L.pin = ''; L.agent = ''; L.leads = []; L.wait = []; L.cards = {}; L.open = {}; L.called = {}; L.tries = {}; L.waTries = {}; L.pending = null; L.pendingRes = null;
-    $('llist').innerHTML = ''; $('wlist').innerHTML = '';
+    L.pin = ''; L.agent = ''; L.tabs = {}; L.counts = {}; L.dueN = {}; L.cards = {}; L.open = {}; L.called = {}; L.tries = {}; L.waTries = {}; L.pending = null; L.pendingRes = null; L.pendingChat = null; L.loaded = false; L.tabSet = false; L.tab = ''; L.duty = true; L.epoch++; L.push = -1; L.synced = false; L.waOn = false;
+    chatReset();
+    $('llist').innerHTML = '';
+    armReset();
     store('leadsPin', ''); store('leadsAgent', '');
     S.code = ''; S.info = null; S.step = 'gate';
     resetDriver();
@@ -1995,24 +2305,70 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
   }
 
   // ---- the list ----
+  // The tabs of the app are the states of a card: New, Will send, Postponed, No answer, Registered, Closed.
+  // The server sends every tab with its cards, its total and how many of them need her now. She never has to think about a status:
+  // a card sits in the tab of its state, and after a call she only writes what happened and says where the card goes.
+  var TABS = ['new', 'send', 'later', 'noans', 'done', 'closed'];
+  var TILE = { 'new': ['New drivers', '#4a90e2'], send: ['Will send', '#f0a020'], later: ['Postponed drivers', '#9b72e6'], noans: ['No answer', '#e0674f'], done: ['Registered drivers', '#2fb36f'], closed: ['Closed drivers', '#8b95a5'] };
+  var HOW = {
+    'new': 'New drivers. Call each one. After the call write what happened.',
+    send: 'They promised to send their data. Remind them or call them and find out why not yet.',
+    later: 'They asked for a call later. Call them at the time.',
+    noans: 'They did not answer. Try again at the time (3 tries at most).',
+    done: 'These drivers are registered. Your work with them is done.',
+    closed: 'These drivers are closed. If one writes again, he comes back as a reply.'
+  };
+  var EMPTY = {                                           // what an empty tab says (it says what puts a card here)
+    'new': 'No new drivers now. A new driver shows here by himself.',
+    send: 'No one is waiting for data. A driver who promises to send his data shows here.',
+    later: 'No postponed calls. A driver who asks for a later call shows here.',
+    noans: 'No unanswered calls. A driver who does not answer shows here.',
+    done: 'No registered drivers yet. A driver you add shows here.',
+    closed: 'No closed drivers.'
+  };
+  var DEST =[['send', 'Promised', 'Will send his data', '#f0a020'], ['later', 'Postponed', 'Postponed', '#9b72e6'], ['noans', 'No Answer', 'Did not answer', '#e0674f'], ['closed', '', 'Closed', '#8b95a5']];
+  var MIN_NOTE = 4;                                      // the shortest call summary, in letters (the server keeps the same rule)
+  function cardsOf(k) { return L.tabs[k] || []; }
+  function activeCards() { return [].concat(cardsOf('new'), cardsOf('send'), cardsOf('later'), cardsOf('noans')); }
+  function dueTotal() { return ['new', 'send', 'later', 'noans'].reduce(function (a, k) { return a + (+L.dueN[k] || 0); }, 0); }
+  function tabCount() { var n = (L.pin && L.duty !== false) ? dueTotal() : 0; $('tabL').textContent = T('Leads') + (n ? ' (' + n + ')' : ''); }
+  function setDutyStore() { store('leadsDuty', L.duty === false ? '0' : '1'); }
+  function takeList(j) {
+    var was = L.duty;
+    L.duty = j.duty !== false;
+    setDutyStore();
+    if (was === false && L.duty) L.tabSet = false;                         // she just started: the tab is chosen again
+    if (was !== false && !L.duty && L.loaded && !L.dutyBusy) toast(T('You were switched OFF'));      // the end of the day, or the manager did it
+    L.loaded = true;
+    L.waOn = j.waOn === true;                                              // the one chat is connected and switched on (the server says so)
+    L.close = +j.close || L.close;
+    L.push = +j.push || 0;
+    if (j.vapidPublicKey) { L.vapid = String(j.vapidPublicKey); store('leadsVapid', L.vapid); }      // the key comes with every list: a girl that is signed in already gets the notification button too
+    var c = j.counters || {};
+    L.done = +c.done || 0;
+    L.remaining = +c.remaining || 0;
+    if (j.wa && typeof j.wa === 'object') L.wa = j.wa;
+    if (j.tabs && typeof j.tabs === 'object') {
+      TABS.forEach(function (k) {
+        L.tabs[k] = Array.isArray(j.tabs[k]) ? j.tabs[k] : [];
+        L.counts[k] = +((j.counts || {})[k]) || L.tabs[k].length;
+        L.dueN[k] = +((j.dueN || {})[k]) || 0;
+      });
+      say('lerr', '');
+    } else {
+      say('lerr', T('The server is old. Tell the manager to deploy the new version.'));
+    }
+  }
   function leadsRefresh() {
     if (!L.on || !L.pin || L.busyList) return Promise.resolve();
     L.busyList = true;
+    var ep = L.epoch;
     return lapi({ action: 'list', pin: L.pin }).then(function (j) {
       L.busyList = false;
-      var c = j.counters || {};
-      L.done = +c.done || 0;
-      L.leads = Array.isArray(j.leads) ? j.leads : [];
-      L.wait = Array.isArray(j.waiting) ? j.waiting : [];
-      L.remaining = L.leads.length;
-      L.waitCount = L.wait.length;
-      if (j.wa && typeof j.wa === 'object') L.wa = j.wa;
-      if (j.groups && typeof j.groups === 'object') {
-        ['later', 'done', 'closed'].forEach(function (k) { L.groups[k] = Array.isArray(j.groups[k]) ? j.groups[k] : []; });
-        L.groups.counts = j.groups.counts || { later: L.groups.later.length, done: L.groups.done.length, closed: L.groups.closed.length };
-      }
-      say('lerr', '');
+      if (ep !== L.epoch) { leadsRefresh(); return; }                      // she switched ON or OFF while this list was coming: it is old, ask again
+      takeList(j);
       renderLeads();
+      pushSync();
     }).catch(function (err) {
       L.busyList = false;
       if (err.bad && /code|pin/i.test(err.message)) { leadsLogout(); say('lgerr', T('Wrong code')); return; }
@@ -2020,34 +2376,24 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     });
   }
   function cleanPhone(p) { return String(p || '').replace(/[^0-9+]/g, ''); }
-  // The percent is the work of today: what she finished / (what she finished + what still waits for a call). New leads make it go down, finished calls make it go up.
-  function renderProgress() {
-    var total = L.done + L.remaining;
-    $('lgoalbox').hidden = total <= 0;
-    var pc = total > 0 ? Math.round(L.done * 100 / total) : 0;
-    $('ldone').textContent = pc + '%';
-    $('lgoalbar').style.width = pc + '%';
-    $('lgoaltext').textContent = T('Finished {a} of {b}', { a: L.done, b: total });
-    $('lwaittext').hidden = !(L.waitCount > 0);
-    $('lwaittext').textContent = T('Waiting for their data: {n}', { n: L.waitCount });
+  // The last message of a driver who sent a file is written by the server as a tag: [Photo], [Voice note] ... The card shows it in the language of the page.
+  var TAGS = { '[Photo]': 'Photo', '[Voice note]': 'Voice note', '[Document]': 'Document', '[Video]': 'Video', '[Location]': 'Location', '[Sticker]': 'Sticker', '[Message]': 'Message' };
+  function msgText(s) {
+    s = String(s || '');
+    var m = /^(\[[A-Za-z ]+\])([\s\S]*)$/.exec(s);
+    return m && TAGS[m[1]] ? '[' + T(TAGS[m[1]]) + ']' + m[2] : s;
   }
-  // ---- the filter: Today / Later / Registered / Closed ----
-  var VIEWS = [['today', 'Today'], ['later', 'Later'], ['done', 'Registered drivers'], ['closed', 'Closed drivers']];
-  function viewCount(k) { return k === 'today' ? L.leads.length + L.wait.length : ((L.groups.counts || {})[k] || 0); }
-  function renderFilter() {
-    var box = $('lfilter');
-    box.hidden = !(L.pin);
-    if (!box.firstChild) {
-      VIEWS.forEach(function (v) {
-        var b = el('button', '', ''); b.type = 'button'; b.dataset.v = v[0];
-        b.onclick = function () { L.view = v[0]; renderLeads(); window.scrollTo(0, 0); };
-        box.appendChild(b);
-      });
-    }
-    Array.prototype.forEach.call(box.children, function (b, i) {
-      b.textContent = T(VIEWS[i][1]) + ' (' + viewCount(VIEWS[i][0]) + ')';
-      b.classList.toggle('on', L.view === VIEWS[i][0]);
-    });
+  // The ready WhatsApp texts come from the Rules box. {name} is the first name of the driver; a driver with no name gets the text without it.
+  function firstName(ld) {
+    var n = String((ld && ld.name) || '').trim();
+    if (!n || /^[0-9+()\s-]+$/.test(n)) return '';
+    return n.split(/\s+/)[0];
+  }
+  function fillMsg(tpl, ld) {
+    tpl = String(tpl || '');
+    var f = firstName(ld);
+    if (f) return tpl.replace(/\{name\}/g, f);
+    return tpl.replace(/\s*\u064a\u0627\s*\{name\}/g, '').replace(/\s*\{name\}/g, '').replace(/\s+([,.!\u060c])/g, '$1').trim();
   }
   function fmtWhen(s) {
     s = String(s || '');
@@ -2056,49 +2402,216 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     var td = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
     return s.slice(0, 10) === td ? s.slice(11, 16) : s.slice(8, 10) + '/' + s.slice(5, 7) + ' ' + s.slice(11, 16);
   }
-  // the line that says where this driver is: the status, what comes next
-  function statusLine(ld) {
-    var st = String(ld.status || ''), t = '', cls = 's-no';
-    if (st === 'New') { t = (+ld.calls > 0) ? T('New') : T('New, not called yet'); cls = 's-due'; }
-    else if (st === 'Replied') { t = T('Replied: call back'); cls = 's-due'; }
-    else if (st === 'No Answer') { t = T('No answer, try {n} of 3', { n: +ld.tries || 1 }); if (ld.retry) t += ' \u00b7 ' + T('next call {t}', { t: fmtWhen(ld.retry) }); }
-    else if (st === 'Postponed') { t = T('Postponed'); if (ld.retry) t += ' \u00b7 ' + T('next call {t}', { t: fmtWhen(ld.retry) }); }
-    else if (st === 'Promised') { t = T('Will send the data'); cls = ld.late ? 's-late' : (ld.due ? 's-due' : 's-wait'); if (ld.due) t += ' \u00b7 ' + T('Follow up now'); }
-    else if (st === 'Data Sent') { t = T('Registered') + (ld.code ? ' \u00b7 ' + ld.code : '') + (ld.active ? ' \u00b7 ' + T('Active') : ''); cls = 's-ok'; }
-    else if (st === 'Closed') { t = T('Closed') + (ld.closeReason ? ' \u00b7 ' + ld.closeReason : ''); }
-    else t = st;
-    return { t: t, cls: cls };
+  function hourText(h) { h = (+h || 0) % 24; return T(h < 12 ? '{h} AM' : '{h} PM', { h: String(h % 12 || 12) }); }
+  function waitText(m) {
+    if (m < 60) return T('Promised {n} min ago', { n: Math.max(m, 1) });
+    if (m < 1440) return T('Promised {n} hours ago', { n: Math.floor(m / 60) });
+    return T('Promised {n} days ago', { n: Math.floor(m / 1440) });
   }
-  function renderLeads() {
-    renderProgress();
-    var keep = {};
-    var today = L.view === 'today';
-    var pairs = today ? [[L.leads, $('llist')], [L.wait, $('wlist')]] : [[L.groups[L.view] || [], $('xlist')]];
-    $('llist').hidden = !today; $('wlist').hidden = !today; $('xlist').hidden = today;
-    renderFilter();
-    pairs.forEach(function (pair) {
-      var box = pair[1];
-      pair[0].forEach(function (ld, i) {
-        var key = String(ld.id);
-        keep[key] = true;
-        var c = L.cards[key];
-        if (!c) { c = makeCard(ld); L.cards[key] = c; }
-        fillCard(c, ld);
-        if (box.children[i] !== c) box.insertBefore(c, box.children[i] || null);
-      });
+  function reasonText(s) {                                // why a card was closed (the server writes it in English)
+    s = String(s || '');
+    if (!s) return '';
+    var m = /^No data after (\d+) days/.exec(s);
+    if (m) return T('No data after {n} days', { n: m[1] });
+    m = /^No reply \((\d+) tries\)/.exec(s);
+    if (m) return T('No reply after {n} tries', { n: m[1] });
+    var r = T(s);
+    return (LANG === 'ar' && r === s && /[A-Za-z]{3}/.test(r)) ? '' : r;
+  }
+
+  // ---- the switch: ON = new drivers and notifications reach her, OFF = no data at all ----
+  var armTimer = null;
+  function armReset() { clearTimeout(armTimer); armTimer = null; $('onrow').classList.remove('arm'); paintDuty(); }
+  function paintDuty() {
+    var on = L.duty !== false, arm = !!armTimer && on;
+    var row = $('onrow');
+    row.className = 'onrow' + (on ? '' : ' off') + (arm ? ' arm' : '') + (L.dutyBusy ? ' busy' : '');
+    row.setAttribute('aria-checked', on ? 'true' : 'false');
+    $('onttl').textContent = T(arm ? 'Tap again to stop working' : (on ? "I'm working" : "I'm not working"));
+    $('onsub').textContent = T(arm ? 'Your untouched cards go to the other girls' : (on ? 'New drivers and notifications reach you' : 'No new drivers and no notifications'));
+    $('onsw').className = 'sw' + (on ? '' : ' off');
+    $('lon').hidden = !on;
+    $('loff').hidden = on;
+    $('loffnote').textContent = T('It switches OFF by itself at {h}', { h: hourText(L.close) });
+    $('lstartwork').disabled = !!L.dutyBusy;
+  }
+  function setDuty(on) {
+    if (L.dutyBusy || !L.pin) return;
+    L.dutyBusy = true; L.epoch++;
+    paintDuty();
+    lapi({ action: 'duty', pin: L.pin, on: on }).then(function (j) {
+      L.dutyBusy = false; L.epoch++;
+      L.duty = j.duty !== false;
+      setDutyStore();
+      L.tabSet = false;
+      if (!L.duty && +j.moved > 0) toast(T('Cards you did not open went to the other girls: {n}', { n: +j.moved }));
+      renderLeads();                                       // at once: the OFF screen, or the empty tiles until her cards come
+      return leadsRefresh();
+    }).catch(function (err) {
+      L.dutyBusy = false;
+      paintDuty();
+      if (err.bad && /code|pin/i.test(err.message)) { leadsLogout(); say('lgerr', T('Wrong code')); return; }
+      say('lerr', TS(err.message));
     });
-    Object.keys(L.cards).forEach(function (key) {
-      if (keep[key]) return;
+  }
+  $('onrow').onclick = function () {
+    if (L.dutyBusy) return;
+    if (L.duty === false) { setDuty(true); return; }
+    if (!armTimer) { armTimer = setTimeout(armReset, 3500); paintDuty(); return; }      // the first tap only asks: switching OFF sends her untouched cards to the others
+    armReset();
+    setDuty(false);
+  };
+  $('lstartwork').onclick = function () { setDuty(true); };
+
+  // ---- what the screen shows ----
+  // The percent is the work of today: what she finished / (what she finished + what still needs a call).
+  function renderProgress() {
+    var total = L.done + L.remaining;
+    $('lprog').hidden = total <= 0;
+    var pc = total > 0 ? Math.round(L.done * 100 / total) : 0;
+    $('ldone').textContent = pc + '%';
+    $('lgoalbar').style.width = pc + '%';
+    $('lgoaltext').textContent = T('Finished {a} of {b}', { a: L.done, b: total });
+  }
+  function defaultTab() {                                  // the tab she lands on: new drivers first, then the first tab that needs her
+    if ((L.counts['new'] || 0) > 0) return 'new';
+    var k = ['send', 'noans', 'later'].filter(function (x) { return (L.dueN[x] || 0) > 0; })[0];
+    if (k) return k;
+    k = ['send', 'noans', 'later', 'done'].filter(function (x) { return (L.counts[x] || 0) > 0; })[0];
+    return k || 'new';
+  }
+  function renderTiles() {
+    var box = $('ltiles');
+    if (!box.firstChild) {
+      TABS.forEach(function (k) {
+        var b = el('button', 'tile'); b.type = 'button'; b.dataset.k = k;
+        b.style.setProperty('--c', TILE[k][1]);
+        var red = el('span', 'red'); red.hidden = true;
+        b.appendChild(red); b.appendChild(el('span', 'n', '0')); b.appendChild(el('div', 't', ''));
+        b.onclick = function () { L.tab = k; L.tabSet = true; renderLeads(); window.scrollTo(0, 0); };
+        box.appendChild(b);
+      });
+    }
+    Array.prototype.forEach.call(box.children, function (b) {
+      var k = b.dataset.k, n = +L.counts[k] || 0, d = +L.dueN[k] || 0;
+      b.children[1].textContent = String(n);
+      b.children[2].textContent = T(TILE[k][0]);
+      var showRed = d > 0 && (k === 'send' || k === 'later' || k === 'noans');
+      b.children[0].hidden = !showRed;
+      if (showRed) b.children[0].textContent = T('{n} now', { n: d });
+      b.classList.toggle('on', L.tab === k);
+      b.classList.toggle('dim', n === 0);
+    });
+  }
+  // the card to start with: a reply, a promise that is late, a new driver, then the calls that are due
+  function nextUp() {
+    var first = function (k, fn) { var a = cardsOf(k); for (var i = 0; i < a.length; i++) if (fn(a[i])) return { c: a[i], tab: k }; return null; };
+    var n = first('new', function (x) { return x.status === 'Replied'; });
+    if (n) { n.why = 'replied'; return n; }
+    n = first('send', function (x) { return x.late; });
+    if (n) { n.why = 'late'; return n; }
+    n = first('new', function () { return true; });
+    if (n) { n.why = 'new'; return n; }
+    n = first('send', function (x) { return x.due; });
+    if (n) { n.why = 'due'; return n; }
+    n = first('noans', function (x) { return x.due; });
+    if (n) { n.why = 'noans'; return n; }
+    n = first('later', function (x) { return x.due; });
+    if (n) { n.why = 'later'; return n; }
+    return null;
+  }
+  function upcoming() {                                    // the next planned call, when nothing needs her now
+    var best = null;
+    ['send', 'later', 'noans'].forEach(function (k) {
+      cardsOf(k).forEach(function (x) { if (x.next && (!best || x.next < best.next)) best = x; });
+    });
+    return best;
+  }
+  function renderNext() {
+    var box = $('lnext'), n = nextUp();
+    if (n) {
+      var c = n.c, line = '';
+      if (n.why === 'replied') line = T('He replied: call him now');
+      else if (n.why === 'late' || n.why === 'due') line = waitText(+c.waitMin || 0) + ' - ' + T(n.why === 'late' ? 'ask him why not yet' : 'remind him');
+      else if (n.why === 'new') line = T('New driver: call him now');
+      else if (n.why === 'noans') line = T('No answer before: try again now');
+      else line = T('The time to call him back came');
+      $('lnwhy').textContent = T('Start here');
+      $('lnname').textContent = String(c.name || c.phone || '');
+      $('lnline').textContent = line;
+      $('lnopen').hidden = false;
+      box.className = 'next';
+      box.hidden = false;
+      return;
+    }
+    var up = upcoming();
+    if (up) {
+      $('lnwhy').textContent = T('Nothing urgent now');
+      $('lnname').textContent = String(up.name || up.phone || '');
+      $('lnline').textContent = T('next call {t}', { t: fmtWhen(up.next) });
+      $('lnopen').hidden = true;
+      box.className = 'next calm';
+      box.hidden = false;
+      return;
+    }
+    box.hidden = true;
+  }
+  $('lnopen').onclick = function () {
+    var n = nextUp();
+    if (!n) return;
+    L.tab = n.tab; L.tabSet = true;
+    renderLeads();
+    var c = L.cards[String(n.c.id)];
+    if (c) {
+      try { c.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { }
+      c.classList.add('pulse');
+      setTimeout(function () { c.classList.remove('pulse'); }, 1600);
+    }
+  };
+  function renderHow() {
+    var k = L.tab, box = $('lhow');
+    box.textContent = '';
+    box.hidden = !(+L.counts[k] > 0);                     // an empty tab shows its own message under the tiles instead
+    box.appendChild(el('b', '', T(TILE[k][0]) + ' (' + (+L.counts[k] || 0) + ')'));
+    box.appendChild(document.createElement('br'));
+    box.appendChild(document.createTextNode(T(HOW[k])));
+  }
+  function renderCards() {
+    var list = cardsOf(L.tab), box = $('llist'), keepAll = {}, shown = {};
+    TABS.forEach(function (k) { cardsOf(k).forEach(function (ld) { keepAll[String(ld.id)] = true; }); });
+    Object.keys(L.cards).forEach(function (key) {         // a card that is in no tab any more (it went to another girl) is forgotten; a card of another tab only waits, with what she wrote in it
+      if (keepAll[key]) return;
       if (L.cards[key].parentNode) L.cards[key].parentNode.removeChild(L.cards[key]);
       delete L.cards[key];
     });
-    $('lh1').hidden = !(today && L.leads.length > 0 && L.wait.length > 0);       // the two headings show only when both lists have cards
-    $('lh2').hidden = !(today && L.wait.length > 0);
-    $('lempty').hidden = !today || L.leads.length > 0 || L.wait.length > 0;
-    $('xempty').hidden = today || (L.groups[L.view] || []).length > 0;
-    var due = L.wait.filter(function (x) { return x.due; }).length;
-    $('lduetext').hidden = !(today && due > 0);
-    $('lduetext').textContent = T('{n} need a follow up now', { n: due });
+    list.forEach(function (ld, i) {
+      var key = String(ld.id);
+      shown[key] = true;
+      var c = L.cards[key];
+      if (!c) { c = makeCard(ld); L.cards[key] = c; }
+      fillCard(c, ld);
+      if (box.children[i] !== c) box.insertBefore(c, box.children[i] || null);
+    });
+    Array.prototype.slice.call(box.children).forEach(function (n) { if (!shown[n.dataset.id]) box.removeChild(n); });
+    var none = list.length === 0;
+    var anyCards = TABS.some(function (k) { return (+L.counts[k] || 0) > 0; });
+    var allDone = none && L.tab === 'new' && dueTotal() === 0 && anyCards;          // "All done" only when she has worked on cards (an empty day says there are no new drivers)
+    $('lempty').hidden = !none || !L.loaded;
+    $('lempty').textContent = T(allDone ? 'All done. Great work.' : (EMPTY[L.tab] || 'Nothing here yet.'));
+  }
+  function clearCards() {
+    var box = $('llist');
+    while (box.firstChild) box.removeChild(box.firstChild);
+  }
+  function renderLeads() {
+    paintDuty();
+    if (L.duty === false) { clearCards(); tabCount(); return; }
+    if (!L.tabSet || !L.tab) { L.tab = defaultTab(); L.tabSet = true; }
+    renderProgress();
+    renderTiles();
+    renderNext();
+    renderHow();
+    renderCards();
     tabCount();
   }
   function isCalled(c) { var id = c.dataset.id; return !!L.called[id] || (+c.r.lead.calls > 0); }
@@ -2113,27 +2626,32 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     var top = el('div', 'lhd');
     var l1 = el('div', 'l1');
     var nm = el('span', 'lname'); nm.dir = 'auto';
-    var nw = el('span', 'badge', 'NEW');      // the tag: NEW, Reply, Retry, Back, Waiting
+    var nw = el('span', 'badge', 'NEW');      // the tag: NEW, Reply, Late, Now
     var tm = el('span', 'ltime');
     l1.appendChild(nm); l1.appendChild(nw); l1.appendChild(tm);
-    var stl = el('div', 'lstat'); stl.dir = 'auto';
     var ph = el('div', 'lphone'); ph.dir = 'ltr';
-    var ms = el('div', 'lmsg'); ms.dir = 'auto';
+    var ms = el('div', 'lmsg'); ms.dir = 'auto';          // the last message of the driver
+    var sm = el('div', 'lsum'); sm.hidden = true;          // what she wrote after her last call
+    sm.appendChild(el('span', '', 'Last summary'));
+    sm.appendChild(document.createTextNode(': '));
+    var smt = el('i'); smt.dir = 'auto'; smt.setAttribute('data-raw', '1'); sm.appendChild(smt);
+    var nx = el('div', 'lnext'); nx.dir = 'auto';          // the next step of this card
     var pc = el('span', 'badge ph');
     var mt = el('div', 'lmeta');                  // what the card knows: the ad, the calls, the WhatsApp texts, the code of the driver
     var chAd = el('span', 'badge soft'), chCalls = el('span', 'badge soft'), chWa = el('span', 'badge soft'), chCode = el('span', 'badge soft'), chAct = el('span', 'badge ph');
+    chAd.setAttribute('data-raw', '1');                    // the name of the ad is data, it is not translated
     [chAd, chCalls, chWa, chCode, chAct].forEach(function (x) { x.hidden = true; mt.appendChild(x); });
-    top.appendChild(l1); top.appendChild(stl); top.appendChild(ph); top.appendChild(ms); top.appendChild(mt);
+    top.appendChild(l1); top.appendChild(ph); top.appendChild(ms); top.appendChild(sm); top.appendChild(nx); top.appendChild(mt);
     c.appendChild(top);
     var pr = el('div', 'lpics'); pr.appendChild(pc); c.appendChild(pr);
     var bt = el('div', 'lbtns');
     var bc = el('button', 'btn fill', 'Call'); bc.type = 'button';
-    var bw = el('button', 'btn', 'WhatsApp'); bw.type = 'button'; bw.hidden = true;      // shows after the first real call
+    var bw = el('button', 'btn', ''); bw.type = 'button';
+    var bwt = el('span', '', 'WhatsApp'); bw.appendChild(bwt);                            // v90: with the one chat on, this button is Chat and shows a dot when the driver wrote
+    var bwd = el('span', 'cdot'); bwd.hidden = true; bw.appendChild(bwd);
     var ba = el('button', 'btn', 'Add driver'); ba.type = 'button';
     bt.appendChild(bc); bt.appendChild(bw); bt.appendChild(ba);
     c.appendChild(bt);
-    var bx = el('button', 'link', 'Will not send'); bx.type = 'button'; bx.hidden = true;      // only on a waiting card
-    c.appendChild(bx);
     var hb = el('button', 'link lhist', 'History'); hb.type = 'button';
     c.appendChild(hb);
     var tl = el('div', 'ltl'); tl.hidden = true;
@@ -2149,27 +2667,18 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     var ccancel = el('button', 'btn', 'Cancel'); ccancel.type = 'button';
     chat.appendChild(csend); chat.appendChild(ccancel);
     var cer = el('p', 'note err'); chat.appendChild(cer);
+    // after a call: what happened (needed), where the card goes, the WhatsApp message. Nothing is saved until the message was sent on WhatsApp.
     var res = el('div', 'lres'); res.hidden = true;
-    var rb = el('div', 'seg tall');
-    var bn = el('button', '', 'No Answer'), bs = el('button', '', 'Will send the data'), bp = el('button', '', 'Postponed'), bi = el('button', '', 'Not Interested');
-    [bn, bs, bp, bi].forEach(function (b) { b.type = 'button'; rb.appendChild(b); });
-    res.appendChild(rb);
-    var pp = el('div', 'seg'); pp.hidden = true;
-    var pk = [['tomorrow', 'Tomorrow'], ['2days', 'In 2 days'], ['nextweek', 'Next week']].map(function (x) { var b = el('button', '', x[1]); b.type = 'button'; b.dataset.v = x[0]; pp.appendChild(b); return b; });
-    res.appendChild(pp);
-    // the message step: the text of the result is ready (from the Rules box), she may change it, and she must send it on WhatsApp. The result is saved when she comes back.
-    var ms2 = el('div', 'msgstep'); ms2.hidden = true;
-    ms2.appendChild(el('label', '', 'WhatsApp message'));
-    var ta = el('textarea', ''); ta.rows = 4; ta.dir = 'auto'; ta.maxLength = 1000;
-    ms2.appendChild(ta);
-    // what happened in the call: spoken (the microphone writes it) or typed. It goes to the column Call notes of the sheet.
-    ms2.appendChild(el('label', '', 'Call summary'));
+    var lab1 = el('div', 'lab'); lab1.appendChild(el('span', '', 'What happened in the call?')); lab1.appendChild(el('span', 'req', 'Required'));
+    res.appendChild(lab1);
     var ta3 = el('textarea', ''); ta3.rows = 3; ta3.dir = 'auto'; ta3.maxLength = 1000; ta3.placeholder = T('What happened in the call? Speak or write.');
-    ms2.appendChild(ta3);
-    var mic = el('button', 'mic', 'Speak'); mic.type = 'button';
+    res.appendChild(ta3);
+    var mic = el('button', 'mic'); mic.type = 'button';
+    mic.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>';
+    var micT = el('span', '', 'Speak instead of typing'); mic.appendChild(micT);
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     var rec = null;
-    function micStop() { if (rec) { try { rec.stop(); } catch (e) { } } rec = null; mic.textContent = T('Speak'); mic.classList.remove('rec'); }
+    function micStop() { if (rec) { try { rec.stop(); } catch (e) { } } rec = null; micT.textContent = T('Speak instead of typing'); mic.classList.remove('rec'); }
     if (!SR) mic.hidden = true;
     mic.onclick = function () {
       if (rec) { micStop(); return; }
@@ -2186,30 +2695,46 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
         rec.onerror = function () { micStop(); r2().err.textContent = T('Voice is not available. Use the microphone of the keyboard.'); };
         rec.onend = function () { micStop(); };
         rec.start();
-        mic.textContent = T('Stop'); mic.classList.add('rec');
+        micT.textContent = T('Stop'); mic.classList.add('rec');
         r2().err.textContent = '';
       } catch (e) { micStop(); r2().err.textContent = T('Voice is not available. Use the microphone of the keyboard.'); }
     };
-    ms2.appendChild(mic);
-    var bsend = el('button', 'btn fill', 'Send on WhatsApp'); bsend.type = 'button';
-    ms2.appendChild(bsend);
+    res.appendChild(mic);
+    var lab2 = el('div', 'lab'); lab2.appendChild(el('span', '', 'Where does the card go?'));
+    res.appendChild(lab2);
+    var dest = el('div', 'dest');
+    var dbs = DEST.map(function (d) { var b = el('button', 'dbtn', d[2]); b.type = 'button'; b.dataset.k = d[0]; b.style.setProperty('--c', d[3]); dest.appendChild(b); return b; });
+    res.appendChild(dest);
+    var pp = el('div', 'seg'); pp.hidden = true;
+    var pk = [['tomorrow', 'Tomorrow'], ['2days', 'In 2 days'], ['nextweek', 'Next week']].map(function (x) { var b = el('button', '', x[1]); b.type = 'button'; b.dataset.v = x[0]; pp.appendChild(b); return b; });
+    res.appendChild(pp);
+    var ms2 = el('div', 'msgstep'); ms2.hidden = true;
+    var lab3 = el('div', 'lab'); lab3.appendChild(el('span', '', 'WhatsApp message to the driver'));
+    ms2.appendChild(lab3);
+    var ta = el('textarea', ''); ta.rows = 4; ta.dir = 'auto'; ta.maxLength = 1000;
+    ms2.appendChild(ta);
     res.appendChild(ms2);
+    var bsend = el('button', 'btn fill go', 'Send on WhatsApp and save'); bsend.type = 'button';
+    res.appendChild(bsend);
     var er = el('p', 'note err'); res.appendChild(er);
+    var pf = el('p', 'note pfoot'); pf.hidden = true;                      // where the card will go after saving
+    res.appendChild(pf);
     c.appendChild(res);
     c.appendChild(chat);
-    c.r = { stat: stl, note: ta3, micStop: micStop, chAd: chAd, chCalls: chCalls, chWa: chWa, chCode: chCode, chAct: chAct, chat: chat, ta2: ta2, csend: csend, cer: cer, hist: hb, tl: tl, rb: rb, ms2: ms2, send: bsend, name: nm, isNew: nw, time: tm, phone: ph, msg: ms, pics: pc, call: bc, wa: bw, add: ba, close: bx, hint: hint, res: res, ta: ta, post: pp, err: er, btns: [bn, bs, bp, bi, bx, bsend].concat(pk), lead: ld };
+    c.r = { waT: bwt, dot: bwd, note: ta3, micStop: micStop, chAd: chAd, chCalls: chCalls, chWa: chWa, chCode: chCode, chAct: chAct, chat: chat, ta2: ta2, csend: csend, cer: cer, hist: hb, tl: tl, ms2: ms2, send: bsend, name: nm, badge: nw, time: tm, phone: ph, msg: ms, sum: sm, sumText: smt, next: nx, pics: pc, call: bc, wa: bw, add: ba, hint: hint, res: res, ta: ta, post: pp, dest: dest, err: er, btns: dbs.concat(pk).concat([bsend]), lead: ld };
     top.onclick = function () {
       var id = c.dataset.id;
-      if (!isCalled(c)) { showHint(c, T('Call first, then write the result.')); return; }      // the result menu opens only after a real call
+      if (!isCalled(c)) { showHint(c, T('Call first, then write the result.')); return; }      // the result panel opens only after a real call
       L.open[id] = !L.open[id];
       applyOpen();
     };
     bw.onclick = function () {
       var lead = c.r.lead;
+      if (L.waOn) { chatOpen(c); return; }                                          // v90: the chat is inside the app
       if (!chat.hidden) { chat.hidden = true; return; }
       showHint(c, '');
       cer.textContent = '';
-      if (!ta2.value.trim()) ta2.value = lead.kind === 'wait' ? (L.wa.Reminder || '') : '';
+      if (!ta2.value.trim()) ta2.value = lead.tab === 'send' ? fillMsg((L.wa || {}).Reminder, lead) : '';
       chat.hidden = false;
       try { ta2.focus(); } catch (e) { }
     };
@@ -2234,62 +2759,90 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
       S.dial(cleanPhone(lead.phone));
     };
     ba.onclick = function () { addDriver(c.r.lead, c); };
-    // a result is chosen: its message is shown. Nothing is saved until the message was sent on WhatsApp.
-    function pick(status, postpone, btn) {
-      c.pick = { status: status, postpone: postpone || '' };
-      r2().btns.forEach(function (b) { b.classList.remove('on'); });
-      if (btn) btn.classList.add('on');
-      ta.value = String((L.wa || {})[status] || '');
+    // where the card goes: the button is the tab. The ready WhatsApp text of that result is shown (she may change it).
+    function statusOf(k) { return k === 'closed' ? (c.r.lead.tab === 'send' ? 'Not Sending' : 'Not Interested') : DEST.filter(function (d) { return d[0] === k; })[0][1]; }
+    function pick(k, postpone) {
+      var status = statusOf(k);
+      c.pick = { k: k, status: status, postpone: postpone || '' };
+      dbs.forEach(function (b) { b.classList.toggle('on', b.dataset.k === k); });
+      pp.hidden = k !== 'later';
+      pk.forEach(function (b) { b.classList.toggle('on', k === 'later' && b.dataset.v === c.pick.postpone); });
+      var def = fillMsg((L.wa || {})[status], c.r.lead);
+      if (!ta.value.trim() || ta.value === c.defText) { ta.value = def; }       // her own text is kept when she changes her mind about the destination
+      c.defText = def;
       ms2.hidden = false;
+      pf.textContent = T('After saving, the card goes to the "{tab}" tab by itself.', { tab: T(TILE[k][0]) });
+      pf.hidden = false;
       r2().err.textContent = '';
-      try { ta.focus(); } catch (e) { }
     }
     function r2() { return c.r; }
-    bn.onclick = function () { pp.hidden = true; pick('No Answer', '', bn); };
-    bs.onclick = function () { pp.hidden = true; pick('Promised', '', bs); };
-    bi.onclick = function () { pp.hidden = true; pick('Not Interested', '', bi); };
-    bp.onclick = function () { pp.hidden = !pp.hidden; if (pp.hidden) { ms2.hidden = true; c.pick = null; bp.classList.remove('on'); } };
-    pk.forEach(function (b) { b.onclick = function () { bp.classList.add('on'); pick('Postponed', b.dataset.v, b); }; });
-    var xt = null;
-    bx.onclick = function () {                             // two taps: a tap by mistake does not close the card
-      if (!xt) { bx.textContent = T('Tap again to close'); bx.classList.add('arm'); xt = setTimeout(function () { xt = null; bx.textContent = T('Will not send'); bx.classList.remove('arm'); }, 3500); return; }
-      clearTimeout(xt); xt = null;
-      bx.textContent = T('Will not send'); bx.classList.remove('arm');
-      c.msgOpen = true; rb.hidden = true; pp.hidden = true;
-      res.hidden = false;
-      pick('Not Sending', '', null);
-    };
+    dbs.forEach(function (b) { b.onclick = function () { pick(b.dataset.k, b.dataset.k === 'later' ? ((c.pick && c.pick.postpone) || 'tomorrow') : ''); }; });
+    pk.forEach(function (b) { b.onclick = function () { pick('later', b.dataset.v); }; });
     bsend.onclick = function () {
+      var note = ta3.value.replace(/\s+/g, ' ').trim();
+      r2().err.textContent = '';
+      if (note.length < MIN_NOTE) { r2().err.textContent = T('Write what happened in the call first.'); try { ta3.focus(); } catch (e) { } return; }
+      if (!c.pick) { r2().err.textContent = T('Choose where the card goes.'); return; }
       var text = ta.value.trim();
-      if (!c.pick) return;
-      if (!text) { c.r.err.textContent = T('Write the message.'); return; }
-      c.r.err.textContent = '';
+      if (!text) { r2().err.textContent = T('Write the message.'); return; }
       micStop();
-      L.pendingRes = { id: c.dataset.id, t: Date.now(), status: c.pick.status, postpone: c.pick.postpone, text: text, note: ta3.value.trim() };
+      if (L.waOn) { sendResult(c, c.pick.status, c.pick.postpone, text, 0, false, note, c.pick.k, true); return; }      // v90: the server sends it from the office number
+      L.pendingRes = { id: c.dataset.id, t: Date.now(), status: c.pick.status, postpone: c.pick.postpone, text: text, note: note, k: c.pick.k };
       S.chat(cleanPhone(c.r.lead.phone), text);
     };
     return c;
   }
-  var TAGS = { 'new': 'NEW', replied: 'Reply', retry: 'Retry', back: 'Due', wait: 'Waiting' };
-  function waitText(m) {
-    if (m < 60) return T('Promised {n} min ago', { n: Math.max(m, 1) });
-    if (m < 1440) return T('Promised {n} hours ago', { n: Math.floor(m / 60) });
-    return T('Promised {n} days ago', { n: Math.floor(m / 1440) });
+  // the next step of a card, in one line
+  function nextLine(ld) {
+    var tab = String(ld.tab || ''), t = '', cls = 'n-no';
+    if (tab === 'new') {
+      if (ld.status === 'Replied') t = T('He replied: call him now');
+      else t = (+ld.calls > 0) ? T('Tap the card and write what happened') : T('Call now');
+      cls = 'n-hot';
+    } else if (tab === 'send') {
+      if (ld.due) { t = T('Follow up now'); cls = ld.late ? 'n-late' : 'n-hot'; }
+      else { t = T('Follow up {t}', { t: fmtWhen(ld.next) }); cls = 'n-wait'; }
+    } else if (tab === 'noans') {
+      var tries = T('try {n} of 3', { n: +ld.tries || 1 });
+      t = ld.due ? T('Try again now') + ' \u00b7 ' + tries : T('next call {t}', { t: fmtWhen(ld.next) }) + ' \u00b7 ' + tries;
+      cls = ld.due ? 'n-hot' : 'n-wait';
+    } else if (tab === 'later') {
+      t = ld.due ? T('Call him back now') : T('next call {t}', { t: fmtWhen(ld.next) });
+      cls = ld.due ? 'n-hot' : 'n-wait';
+    } else if (tab === 'done') {
+      t = T('Registered') + (ld.code ? ' \u00b7 ' + ld.code : '') + (ld.active ? ' \u00b7 ' + T('Active') : '');
+      cls = 'n-ok';
+    } else if (tab === 'closed') {
+      var rs = reasonText(ld.closeReason);
+      t = T('Closed') + (rs ? ' \u00b7 ' + rs : '');
+    }
+    return { t: t, cls: cls };
   }
   function fillCard(c, ld) {
-    var r = c.r, wait = ld.kind === 'wait';
+    var r = c.r, tab = String(ld.tab || '');
     r.lead = ld;
     r.name.textContent = String(ld.name || ld.phone || '');
-    var tag = ld.tag || (ld.isNew ? 'new' : '');
-    r.isNew.hidden = !tag;
-    r.isNew.textContent = (wait && ld.due) ? T('Follow up') : (TAGS[tag] || '');
-    r.isNew.className = 'badge' + ((tag === 'replied' || (wait && ld.due)) ? ' hot' : (tag === 'new' ? '' : ' soft'));
-    r.time.textContent = wait ? waitText(+ld.waitMin || 0) : String(ld.time || '');
-    var sl = statusLine(ld);
-    r.stat.textContent = sl.t; r.stat.className = 'lstat ' + sl.cls;
+    var badge = '', cls = 'badge';
+    if (ld.status === 'Replied') { badge = 'Reply'; cls += ' hot'; }
+    else if (ld.isNew) { badge = 'NEW'; }
+    else if (ld.late) { badge = 'Late'; cls += ' red'; }
+    else if (ld.due && (tab === 'send' || tab === 'later' || tab === 'noans')) { badge = 'Now'; cls += ' hot'; }
+    r.badge.hidden = !badge;
+    r.badge.textContent = badge ? T(badge) : '';
+    r.badge.className = cls;
+    var when = '';
+    if (tab === 'new') when = String(ld.time || '');
+    else if (tab === 'send') when = waitText(+ld.waitMin || 0);
+    else if (tab === 'done') when = fmtWhen(ld.sent);
+    else if (tab === 'closed') when = fmtWhen(ld.updated);
+    r.time.textContent = when;
+    var nl = nextLine(ld);
+    r.next.textContent = nl.t; r.next.className = 'lnext ' + nl.cls; r.next.hidden = !nl.t;
     r.phone.textContent = String(ld.phone || '');
-    r.msg.textContent = String(ld.lastMessage || '');
+    r.msg.textContent = msgText(ld.lastMessage);
     r.msg.hidden = !ld.lastMessage;
+    r.sumText.textContent = String(ld.note || '');
+    r.sum.hidden = !ld.note;
     var nc = +ld.calls || 0, nw = +ld.wa || 0;
     r.chAd.textContent = String(ld.ad || ''); r.chAd.hidden = !ld.ad;
     r.chCalls.textContent = T('Calls {n}', { n: nc }); r.chCalls.hidden = !(nc > 0);
@@ -2299,22 +2852,24 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     var n = +ld.photos || 0;
     r.pics.textContent = n + (n === 1 ? ' photo' : ' photos');
     r.pics.parentNode.hidden = !(n > 0);
-    c.classList.toggle('isnew', tag === 'new' || tag === 'replied');
+    c.classList.toggle('isnew', ld.status === 'Replied' || !!ld.isNew);
     c.classList.toggle('late', !!ld.late);
-    c.classList.toggle('due', !!ld.due);
-    var seen = ld.kind === 'view';
-    r.add.hidden = ld.status === 'Data Sent' || ld.status === 'Closed';
-    c.classList.toggle('waitcard', wait);
-    r.call.hidden = wait;
+    c.classList.toggle('due', !!ld.due && (tab === 'send' || tab === 'later' || tab === 'noans'));
+    r.add.hidden = tab === 'done' || tab === 'closed';
+    r.call.hidden = false;
     r.wa.hidden = false;
-    r.wa.className = wait ? 'btn fill' : 'btn';
-    r.close.hidden = !wait;
+    var un = L.waOn ? (+ld.unread || 0) : 0;                                   // v90: the driver wrote and she did not read it yet
+    r.waT.textContent = T(L.waOn ? 'Chat' : 'WhatsApp');
+    r.dot.hidden = !un; r.dot.textContent = un ? (un > 9 ? '9+' : String(un)) : '';
+    c.classList.toggle('unr', un > 0);
+    r.send.textContent = T(L.waOn ? 'Send and save' : 'Send on WhatsApp and save');
+    var wa1 = tab === 'send';                                                   // a promise: the reminder on WhatsApp is the main button
+    r.wa.className = wa1 ? 'btn fill' : 'btn';
+    r.call.className = (!wa1 && !isCalled(c)) ? 'btn fill' : 'btn';
     r.res.hidden = resHidden(c, ld);
-    r.call.className = isCalled(c) ? 'btn' : 'btn fill';
   }
   function resHidden(c, ld) {
-    if (ld.kind === 'wait') return !c.msgOpen;
-    if (ld.status === 'Data Sent' || ld.status === 'Closed') return true;
+    if (ld.tab === 'done' || ld.tab === 'closed') return true;
     return !(L.open[c.dataset.id] && isCalled(c));
   }
   function applyOpen() {
@@ -2322,30 +2877,40 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
   }
 
   // ---- a result of a call ----
-  function sendResult(c, status, postpone, text, away, second, note) {
+  function sendResult(c, status, postpone, text, away, second, note, dest, api) {
     var r = c.r, lead = r.lead;
     if (c.sending) return;
     c.sending = true;
     r.btns.forEach(function (b) { b.disabled = true; });
     r.err.textContent = '';
-    var body = { action: 'update', pin: L.pin, id: lead.id, status: status, message: text, waAwayMs: away };
+    var body = { action: 'update', pin: L.pin, id: lead.id, status: status, message: text, waAwayMs: away, note: note };
     if (second) body.second = true;
-    if (note) body.note = note;
-    if (status === 'Postponed') body.postpone = postpone;
-    lapi(body).then(function () {
-      toast(T('Saved \u2713'));
+    if (api) body.api = true;
+    if (status === 'Postponed') body.postpone = postpone || 'tomorrow';
+    lapi(body).then(function (j) {
+      if (api && j.fallback) {                             // the chat could not send it and nothing was saved: the WhatsApp of the girl is used, as in v89
+        c.sending = false;
+        r.btns.forEach(function (b) { b.disabled = false; });
+        r.err.textContent = T('The chat could not send it. WhatsApp opens: send the message from your phone.');
+        L.pendingRes = { id: String(lead.id), t: Date.now(), status: status, postpone: postpone, text: text, note: note, k: dest };
+        S.chat(cleanPhone(lead.phone), text);
+        return;
+      }
+      var where = dest && TILE[dest] ? TILE[dest][0] : '';
+      toast(T('Saved \u2713') + (where ? ' \u00b7 ' + T(where) : '') + (j.sent === 'template' ? ' \u00b7 ' + T('Ready message sent') : ''));
       c.classList.add('gone');
-      setTimeout(function () {                             // the list comes from the server: a promise moves the card to the waiting list, a result moves the percent
+      setTimeout(function () {                             // the list comes from the server: the card is in its new tab, the numbers and the next card are new
         var key = c.dataset.id;
         if (c.parentNode) c.parentNode.removeChild(c);
         delete L.cards[key];
-        L.leads = L.leads.filter(function (x) { return String(x.id) !== key; });
-        L.wait = L.wait.filter(function (x) { return String(x.id) !== key; });
+        delete L.open[key];
+        TABS.forEach(function (k) { L.tabs[k] = cardsOf(k).filter(function (x) { return String(x.id) !== key; }); });
+        var src = lead.tab;                                // the numbers move at once; the list from the server makes them right a second later
+        if (src && L.counts[src] > 0) L.counts[src]--;
+        if (src && lead.due && L.dueN[src] > 0) L.dueN[src]--;
+        if (dest && L.counts[dest] !== undefined) L.counts[dest]++;
         if (status !== 'Not Sending') L.done += 1;
-        L.remaining = L.leads.length; L.waitCount = L.wait.length;
-        renderProgress();
-        $('lempty').hidden = L.leads.length > 0 || L.wait.length > 0;
-        tabCount();
+        renderLeads();
         leadsRefresh();
       }, 350);
     }).catch(function (err) {
@@ -2357,7 +2922,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
   }
 
   // ---- the story of a card (from the server Log) ----
-  var EVENTS = { 'New lead': 'Arrived', 'Reply': 'Replied', 'Message': 'Wrote again', 'Call': 'Call', 'Try': 'Short try', 'WhatsApp': 'WhatsApp', 'WhatsApp sent': 'WhatsApp sent', 'Update': 'Result', 'Close': 'Closed', 'Closed': 'Closed', 'Added': 'Registered', 'Assigned': 'Assigned', 'Reassigned': 'Moved', 'Upload': 'Photo', 'Active': 'Active', 'Sheet edit': 'Manager edit', 'Call note': 'Call summary' };
+  var EVENTS = { 'New lead': 'Arrived', 'Reply': 'Replied', 'Message': 'Wrote again', 'Call': 'Call', 'Try': 'Short try', 'WhatsApp': 'WhatsApp', 'WhatsApp sent': 'WhatsApp sent', 'Update': 'Result', 'Close': 'Closed', 'Closed': 'Closed', 'Added': 'Registered', 'Assigned': 'Assigned', 'Reassigned': 'Moved', 'Upload': 'Photo', 'Active': 'Active', 'Sheet edit': 'Manager edit', 'Call note': 'Call summary', 'WA auto': 'Auto message' };
   function loadHistory(c) {
     var tl = c.r.tl;
     tl.hidden = false;
@@ -2393,6 +2958,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
       lead.wa = (+j.wa) || ((+lead.wa || 0) + 1);
       fillCard(c, lead);
       if (!r.tl.hidden) loadHistory(c);
+      if (CH.on && CH.id === String(lead.id)) { $('chtext').value = ''; chGrow(); $('cherr').textContent = ''; chLoad(false); }
     }).catch(function (err) {
       c.chatting = false; r.csend.disabled = false;
       if (err.bad && /code|pin/i.test(err.message)) { leadsLogout(); say('lgerr', T('Wrong code')); return; }
@@ -2405,19 +2971,23 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
   // The second short try opens the menu anyway (so she is never stuck). The server keeps the same rule and writes Call or Try in its Log with the seconds.
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState !== 'visible' || !L.on) return;
+    if (CH.on) { CH.quiet = 0; chLoad(false); }                         // she comes back to the phone: the chat is read at once
     if (L.pendingChat) {
       var q2 = L.pendingChat, id2 = String(q2.id), aw2 = Date.now() - q2.t, c2 = L.cards[id2];
       L.pendingChat = null;
       if (c2) {
         if (aw2 >= WA_MIN_MS || (L.chatTries[id2] || 0) >= 1) { L.chatTries[id2] = 0; sendChat(c2, q2.text, aw2, aw2 < WA_MIN_MS); }
-        else { L.chatTries[id2] = (L.chatTries[id2] || 0) + 1; c2.r.cer.textContent = T('WhatsApp did not open. Press Send again.'); }
+        else {
+          L.chatTries[id2] = (L.chatTries[id2] || 0) + 1; c2.r.cer.textContent = T('WhatsApp did not open. Press Send again.');
+          if (CH.on && CH.id === id2) $('cherr').textContent = T('WhatsApp did not open. Press Open WhatsApp again.');
+        }
       }
     }
     if (L.pendingRes) {
       var q = L.pendingRes, qid = String(q.id), qaway = Date.now() - q.t, qc = L.cards[qid];
       L.pendingRes = null;
       if (qc) {
-        if (qaway >= WA_MIN_MS || (L.waTries[qid] || 0) >= 1) { L.waTries[qid] = 0; sendResult(qc, q.status, q.postpone, q.text, qaway, qaway < WA_MIN_MS, q.note); }
+        if (qaway >= WA_MIN_MS || (L.waTries[qid] || 0) >= 1) { L.waTries[qid] = 0; sendResult(qc, q.status, q.postpone, q.text, qaway, qaway < WA_MIN_MS, q.note, q.k); }
         else { L.waTries[qid] = (L.waTries[qid] || 0) + 1; qc.r.err.textContent = T('WhatsApp did not open. Press Send again.'); }
       }
     }
@@ -2473,6 +3043,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
   }
   function addDriver(lead, c) {
     if (!(+lead.photos > 0)) { startDriver(lead, []); try { $('file').click(); } catch (e) { } return; }      // no photos waiting: the photo picker opens at once (the photos are in her WhatsApp gallery)
+    if (L.waOn) { pickOpen(lead); return; }                                // v90: she ticks the photos of the chat
     var b = c.r.add;
     b.disabled = true;
     b.textContent = T('Loading photos...');
@@ -2526,7 +3097,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     var build = function () {
       box.innerHTML = '';
       var last = store('leadsLast');
-      var list = L.leads.slice().sort(function (a, b) { return (String(b.id) === last ? 1 : 0) - (String(a.id) === last ? 1 : 0); });
+      var list = activeCards().sort(function (a, b) { return (String(b.id) === last ? 1 : 0) - (String(a.id) === last ? 1 : 0); });
       list.forEach(function (ld) {
         var b = el('button', 'wbtn' + (String(ld.id) === last ? ' last' : ''));
         b.type = 'button';
@@ -2552,6 +3123,586 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
   }
   $('wother').onclick = function () { var f = L.shared || []; clearShared(); startDriver(null, f); };
 
+  // ================================================================
+  // ---------- v90: the one chat inside the card ----------
+  // The driver wrote to the office number (he came from the Facebook ad). The girl reads and answers HERE: she never opens WhatsApp.
+  // This works only when the server says waOn (the chat is connected and switched on). Otherwise the page is the page of v89.
+  var CH = { on: false, id: '', c: null, nodes: {}, keys: [], day: '', open: true, block: false, sw: true, showWa: false, busy: false, loading: false, again: false, mediaBusy: false, rounds: 0, timer: null, quiet: 0, stick: true, audio: null, netErr: false };
+  var PK = { on: false, id: '', lead: null, items: [], sel: {} };
+  var MEDIA = {}, MEDIA_N = 0;                              // 'leadId:key' -> { file, url, mime, name } or { miss: true }
+  var CH_POLL = CFG.chatEvery || 6000;                      // the open chat asks the server every 6 seconds (slower when nothing new comes)
+  var LAY = [];
+
+  // ---- layers: the chat, the photo chooser and the big picture sit on top of the page. The Back button of the phone closes the top one.
+  function layerOpen(close) {
+    LAY.push(close);
+    try { history.pushState({ tfl: LAY.length }, ''); } catch (e) { }
+  }
+  function layerRun(depth) {
+    while (LAY.length > depth) { var f = LAY.pop(); try { f(); } catch (e) { } }
+  }
+  function layerClose(n) {                                  // the arrow of the app: the same as the Back button of the phone
+    n = Math.min(n || 1, LAY.length);
+    if (!n) return;
+    var depth = LAY.length - n, st = history.state, gone = false;
+    if (st && +st.tfl === LAY.length) {
+      var seen = function () { gone = true; };
+      window.addEventListener('popstate', seen, { once: true });
+      try { history.go(-n); } catch (e) { }
+      setTimeout(function () { if (!gone) { window.removeEventListener('popstate', seen); layerRun(depth); } }, 400);
+      return;
+    }
+    layerRun(depth);
+  }
+  function layerDrop() {                                    // every layer goes at once (the page goes to another screen); the history is put back a moment later
+    var n = LAY.length;
+    layerRun(0);
+    if (n) { try { history.go(-n); } catch (e) { } }
+  }
+  window.addEventListener('popstate', function () { var st = history.state; layerRun((st && +st.tfl) || 0); });
+
+  // ---- the keyboard of the phone must not hide the box to write in ----
+  function chFit() {
+    var vv = window.visualViewport, v = $('chatv');
+    if (!vv) return;
+    [v, $('pickv')].forEach(function (x) {
+      if (x.hidden) return;
+      x.style.height = Math.round(vv.height) + 'px';
+      x.style.top = Math.round(vv.offsetTop) + 'px';
+      x.style.bottom = 'auto';
+    });
+    if (CH.on && CH.stick) { var b = $('chmsgs'); b.scrollTop = b.scrollHeight; }
+  }
+  if (window.visualViewport) { window.visualViewport.addEventListener('resize', chFit); window.visualViewport.addEventListener('scroll', chFit); }
+
+  // ---- the files of the chat (photos, voice notes, documents) are kept in memory while the page lives ----
+  function mkey(id, k) { return String(id) + ':' + k; }
+  function mediaGet(id, k) { return MEDIA[mkey(id, k)] || null; }
+  function mediaTake(id, items) {
+    (items || []).forEach(function (it) {
+      var key = mkey(id, it.k);
+      if (!it || it.miss || !it.data) { MEDIA[key] = { miss: true }; return; }
+      try {
+        var f = b64file(it, 0);
+        MEDIA[key] = { file: f, url: URL.createObjectURL(f), mime: String(it.mime || f.type || ''), name: String(it.name || f.name || '') };
+        MEDIA_N++;
+      } catch (e) { MEDIA[key] = { miss: true }; }
+    });
+    if (MEDIA_N > 150) {                                    // a long day: the files of the other drivers go
+      Object.keys(MEDIA).forEach(function (key) {
+        if (key.indexOf(String(id) + ':') === 0) return;
+        if (MEDIA[key].url) { try { URL.revokeObjectURL(MEDIA[key].url); } catch (e) { } MEDIA_N--; }
+        delete MEDIA[key];
+      });
+    }
+  }
+  function mediaForget(id) {                                // id given: only the misses of that driver (they are asked again). No id: everything (she signed out)
+    Object.keys(MEDIA).forEach(function (key) {
+      var m = MEDIA[key];
+      if (id !== undefined && !(m.miss && key.indexOf(String(id) + ':') === 0)) return;
+      if (m.url) { try { URL.revokeObjectURL(m.url); } catch (e) { } MEDIA_N--; }
+      delete MEDIA[key];
+    });
+  }
+  // Asks the server for the files of some messages (12 at most in one call). Every key gets an answer: a file or a miss.
+  function chMediaLoad(keys, id) {
+    id = String(id || CH.id);
+    var want = keys.filter(function (k) { return !MEDIA[mkey(id, k)]; }).slice(0, 12);
+    if (!want.length) return Promise.resolve(false);
+    return lapi({ action: 'media', pin: L.pin, id: id, keys: want }).then(function (j) {
+      mediaTake(id, j.items);
+      var more = Array.isArray(j.more) ? j.more : [];
+      want.forEach(function (k) { if (!MEDIA[mkey(id, k)] && more.indexOf(k) === -1) MEDIA[mkey(id, k)] = { miss: true }; });
+      return true;
+    }).catch(function (err) {
+      chFail(err);
+      return false;
+    });
+  }
+
+  // ---- small helpers ----
+  function chTime(t) { return String(t || '').slice(6, 11); }                 // 'MM-DD HH:MM' -> 'HH:MM'
+  function chDayKey(t) { return String(t || '').slice(0, 5); }                // 'MM-DD'
+  function chDayLabel(key) {
+    var d = new Date(), pad = function (n) { return ('0' + n).slice(-2); }, y = new Date(d.getTime() - 86400000);
+    if (key === pad(d.getMonth() + 1) + '-' + pad(d.getDate())) return T('Today');
+    if (key === pad(y.getMonth() + 1) + '-' + pad(y.getDate())) return T('Yesterday');
+    return key.slice(3, 5) + '/' + key.slice(0, 2);
+  }
+  function fmtDur(s) { if (!isFinite(s) || s < 0) return '0:00'; s = Math.floor(s); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+  var ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>';
+  var ICON_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"></path></svg>';
+  var ICON_DOC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path></svg>';
+  var ICON_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>';
+  var KIND = { video: 'Video', sticker: 'Sticker', other: 'Message' };
+  function chText(s) { var t = el('div', 'btxt'); t.dir = 'auto'; t.setAttribute('data-raw', '1'); t.textContent = String(s || ''); return t; }
+
+  // ---- one bubble ----
+  function chBuild(b, m) {
+    var cont = b._cont, ty = m.ty;
+    cont.textContent = '';
+    if (ty === 'image') {
+      var box = el('div', 'bimg'); box.tabIndex = 0; box.setAttribute('role', 'button');
+      box._ph = el('span', 'bph', T('Loading...')); box.appendChild(box._ph);
+      box.onclick = function () { chImageTap(b); };
+      cont.appendChild(box); b._img = box;
+      if (m.x) cont.appendChild(chText(m.x));
+    } else if (ty === 'audio') {
+      var v = el('div', 'voice');
+      var pb = el('button', 'vplay'); pb.type = 'button'; pb.innerHTML = ICON_PLAY; pb.setAttribute('aria-label', T('Voice note'));
+      var bar = el('div', 'vbar'), fill = el('i'); bar.appendChild(fill);
+      var vt = el('span', 'vt', '0:00'); vt.dir = 'ltr';
+      v.appendChild(pb); v.appendChild(bar); v.appendChild(vt);
+      cont.appendChild(v);
+      pb.onclick = function () { chPlay(b); };
+      b._voice = { btn: pb, fill: fill, time: vt, audio: null };
+      if (m.x) cont.appendChild(chText(m.x));
+    } else if (ty === 'document') {
+      var d = el('button', 'bdoc'); d.type = 'button'; d.innerHTML = ICON_DOC;
+      var dn = el('span', 'bdn'); dn.setAttribute('data-raw', '1'); dn.dir = 'auto'; dn.textContent = m.n || T('Document'); d.appendChild(dn);
+      d.onclick = function () { chDocTap(b); };
+      cont.appendChild(d);
+      if (m.x) cont.appendChild(chText(m.x));
+    } else if (ty === 'location') {
+      var a = el('a', 'bdoc'); a.innerHTML = ICON_PIN;
+      a.href = 'https://www.google.com/maps?q=' + encodeURIComponent(String(m.x || '')); a.target = '_blank'; a.rel = 'noopener';
+      var ln = el('span', 'bdn'); ln.setAttribute('data-raw', '1'); ln.dir = 'auto'; ln.textContent = m.n || T('Location'); a.appendChild(ln);
+      a.appendChild(el('small', '', T('Open on the map')));
+      cont.appendChild(a);
+    } else if (ty === 'video' || ty === 'sticker' || ty === 'other') {
+      cont.appendChild(el('div', 'bnote', T(KIND[ty]) + ': ' + T('it cannot be shown here')));
+      if (m.x) cont.appendChild(chText(m.x));
+    } else {
+      if (ty === 'template') cont.appendChild(el('div', 'btag', T('Ready message')));
+      cont.appendChild(chText(m.x));
+    }
+  }
+  function chStatus(b, m) {
+    if (!b._tick) return;
+    var st = String(m.st || ''), tk = b._tick;
+    b.classList.toggle('failed', st === 'failed');
+    if (b._fail) b._fail.hidden = st !== 'failed';
+    tk.className = 'tick' + (st === 'read' ? ' read' : '') + (st === 'failed' ? ' fail' : '');
+    tk.textContent = st === 'failed' ? '!' : ((st === 'delivered' || st === 'read') ? '\u2713\u2713' : '\u2713');
+  }
+  function chBubble(m) {
+    var out = m.d === 'out';
+    var b = el('div', 'bub ' + (out ? 'out' : 'in'));
+    b._m = m;
+    var who = '';
+    if (out && m.w === 'auto') who = T('Auto');
+    else if (out && m.w && m.w !== L.agent) who = m.w;
+    else if (!out && m.n === 'shared') who = T('Shared from your phone');
+    if (who) b.appendChild(el('div', 'bwho', who));
+    b._cont = el('div', 'bcont'); b.appendChild(b._cont);
+    chBuild(b, m);
+    var meta = el('div', 'bmeta');
+    meta.appendChild(el('span', 'btm', chTime(m.t)));
+    if (out) { b._tick = el('span', 'tick'); meta.appendChild(b._tick); }
+    b.appendChild(meta);
+    if (out) { b._fail = el('div', 'bfail', T('Did not arrive')); b._fail.hidden = true; b.appendChild(b._fail); }
+    chStatus(b, m);
+    chFill(b);
+    return b;
+  }
+  // the file arrived (or it did not): the bubble shows it
+  function chFill(b) {
+    var m = b._m, med = mediaGet(CH.id, m.k);
+    if (m.ty === 'image' && b._img) {
+      var box = b._img;
+      if (med && med.url) {
+        if (!box._im) {
+          var im = new Image(); im.alt = '';
+          im.onload = function () { if (im.naturalWidth && im.naturalHeight) box.style.aspectRatio = im.naturalWidth + ' / ' + im.naturalHeight; if (CH.stick) { var s = $('chmsgs'); s.scrollTop = s.scrollHeight; } };
+          im.src = med.url;
+          box._im = im; box.textContent = ''; box.appendChild(im); box.classList.add('ok');
+        }
+      } else if (med && med.miss) box._ph.textContent = T('Tap to try again');
+      else if (!m.f) box._ph.textContent = T('The photo is not available.');
+    } else if (m.ty === 'audio' && b._voice) {
+      b._voice.btn.classList.toggle('wait', !(med && med.url));
+    }
+  }
+  function chUpdate(b, m) {
+    var old = b._m, changed = old.st !== m.st, gotFile = !old.f && !!m.f;
+    b._m = m;
+    chStatus(b, m);
+    if (gotFile) chFill(b);
+    return changed || gotFile;
+  }
+  function chImageTap(b) {
+    var m = b._m, med = mediaGet(CH.id, m.k);
+    if (med && med.url) { imgOpen(med.url); return; }
+    if (!m.f) return;
+    delete MEDIA[mkey(CH.id, m.k)];                         // it is asked again
+    if (b._img._ph) b._img._ph.textContent = T('Loading...');
+    chMediaLoad([m.k]).then(function () { chFill(b); var md = mediaGet(CH.id, m.k); if (md && md.url) imgOpen(md.url); });
+  }
+  function chDocTap(b) {
+    var m = b._m;
+    var go = function (md) {
+      if (!md || !md.url) { toast(T('The file is not available.')); return; }
+      var a = document.createElement('a'); a.href = md.url; a.download = md.name || m.n || 'file'; a.target = '_blank'; a.rel = 'noopener';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    };
+    var med = mediaGet(CH.id, m.k);
+    if (med) { go(med); return; }
+    if (!m.f) { toast(T('The file is not available.')); return; }
+    chMediaLoad([m.k]).then(function () { go(mediaGet(CH.id, m.k)); });
+  }
+  function chPlay(b) {
+    var m = b._m, vo = b._voice, med = mediaGet(CH.id, m.k);
+    if (!med || !med.url) {
+      if (m.f) chMediaLoad([m.k]).then(function () { chFill(b); var md = mediaGet(CH.id, m.k); if (md && md.url) chPlay(b); else toast(T('The file is not available.')); });
+      else toast(T('The file is not available.'));
+      return;
+    }
+    if (!vo.audio) {
+      var a = new Audio(med.url);
+      vo.audio = a;
+      a.onloadedmetadata = function () { vo.time.textContent = fmtDur(a.duration); };
+      a.ontimeupdate = function () { if (isFinite(a.duration) && a.duration > 0) vo.fill.style.width = Math.min(100, a.currentTime * 100 / a.duration) + '%'; vo.time.textContent = fmtDur(a.currentTime); };
+      a.onended = function () { vo.btn.innerHTML = ICON_PLAY; vo.fill.style.width = '0%'; vo.time.textContent = fmtDur(a.duration); };
+      a.onpause = function () { vo.btn.innerHTML = ICON_PLAY; };
+      a.onplay = function () { vo.btn.innerHTML = ICON_PAUSE; };
+      a.onerror = function () { vo.btn.innerHTML = ICON_PLAY; toast(T('This voice note cannot be played on this phone.')); };
+    }
+    if (vo.audio.paused) {
+      if (CH.audio && CH.audio !== vo.audio) { try { CH.audio.pause(); } catch (e) { } }      // one voice at a time
+      CH.audio = vo.audio;
+      var p = vo.audio.play();
+      if (p && p.catch) p.catch(function () { toast(T('This voice note cannot be played on this phone.')); });
+    } else vo.audio.pause();
+  }
+
+  // ---- the list of bubbles. Only what is new is added, so nothing jumps and a voice note that plays is not cut.
+  function chRender(msgs, first) {
+    var box = $('chmsgs');
+    Array.prototype.slice.call(box.querySelectorAll('.bub.pend')).forEach(function (n) { if (n.parentNode) n.parentNode.removeChild(n); });
+    var uids = [], count = {};
+    msgs.forEach(function (m) { var n = count[m.k] = (count[m.k] || 0) + 1; uids.push(n > 1 ? m.k + '#' + n : m.k); });
+    var same = CH.keys.length <= uids.length && CH.keys.every(function (u, i) { return uids[i] === u; });
+    if (!same) { box.textContent = ''; CH.nodes = {}; CH.keys = []; CH.day = ''; }
+    var added = 0, incoming = 0, changed = false;
+    msgs.forEach(function (m, i) {
+      var u = uids[i], b = CH.nodes[u];
+      if (b && i < CH.keys.length) { if (chUpdate(b, m)) changed = true; return; }
+      var dk = chDayKey(m.t);
+      if (dk && dk !== CH.day) { box.appendChild(el('div', 'chday', chDayLabel(dk))); CH.day = dk; }
+      b = chBubble(m);
+      CH.nodes[u] = b; CH.keys.push(u);
+      box.appendChild(b);
+      added++; if (m.d === 'in') incoming++;
+    });
+    $('chempty').hidden = msgs.length > 0;
+    if (added) {
+      if (first || CH.stick) box.scrollTop = box.scrollHeight;
+      else if (incoming) $('chnew').hidden = false;
+    }
+    return added > 0 || changed;
+  }
+  $('chmsgs').addEventListener('scroll', function () {
+    var b = $('chmsgs');
+    CH.stick = b.scrollHeight - b.scrollTop - b.clientHeight < 120;
+    if (CH.stick) $('chnew').hidden = true;
+  });
+  $('chnew').onclick = function () { var b = $('chmsgs'); b.scrollTop = b.scrollHeight; $('chnew').hidden = true; };
+
+  // ---- the photos, voice notes and documents that are needed: the newest first, a few at a time ----
+  function chMediaPump() {
+    if (CH.mediaBusy || !CH.on || CH.rounds > 8) return;
+    var id = CH.id, need = [];
+    CH.keys.slice().reverse().forEach(function (u) {
+      var b = CH.nodes[u], m = b && b._m;
+      if (m && m.f && (m.ty === 'image' || m.ty === 'audio') && !MEDIA[mkey(id, m.k)]) need.push(m);
+    });
+    need.sort(function (a, b) { return (a.ty === 'image' ? 0 : 1) - (b.ty === 'image' ? 0 : 1); });
+    if (!need.length) { CH.rounds = 0; return; }
+    CH.mediaBusy = true; CH.rounds++;
+    chMediaLoad(need.slice(0, 6).map(function (m) { return m.k; }), id).then(function (got) {
+      CH.mediaBusy = false;
+      if (!CH.on || id !== CH.id) return;
+      Object.keys(CH.nodes).forEach(function (u) { chFill(CH.nodes[u]); });
+      if (got) chMediaPump();
+    });
+  }
+
+  // ---- the box at the bottom: write, or why she cannot write ----
+  var WHY = {
+    off: 'The chat is not connected now. Use WhatsApp.',
+    blocked: 'He asked to stop messages. Do not write to him.',
+    window: 'More than 24 hours passed since he wrote. A free message cannot be sent now.',
+    limit: 'The daily limit of messages is over. Use WhatsApp.',
+    error: 'The message did not go. Try again or use WhatsApp.',
+    phone: 'The phone number is not right.'
+  };
+  function chBar() {
+    var lead = CH.c ? CH.c.r.lead : null;
+    var note = $('chnote'), acts = $('chacts'), row = $('chrow');
+    acts.textContent = '';
+    var why = '';
+    if (!CH.sw) why = WHY.off;
+    else if (CH.block) why = WHY.blocked;
+    else if (!CH.open) why = WHY.window;
+    note.hidden = !why;
+    note.textContent = why ? T(why) : '';
+    row.hidden = !!why;
+    var wa = el('button', 'btn small', T('Open WhatsApp')); wa.type = 'button'; wa.onclick = chOpenWa;
+    if (!CH.sw) acts.appendChild(wa);
+    else if (!CH.block && !CH.open) {
+      if (lead && lead.tab === 'send') { var rm = el('button', 'btn small fill', T('Send the ready reminder')); rm.type = 'button'; rm.onclick = chReminder; acts.appendChild(rm); }
+      acts.appendChild(wa);
+    } else if (!why && CH.showWa) acts.appendChild(wa);
+    acts.hidden = !acts.firstChild;
+  }
+  function chGrow() { var t = $('chtext'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 120) + 'px'; }
+  $('chtext').addEventListener('input', chGrow);
+  function chPending(text) {
+    var b = el('div', 'bub out pend');
+    var cont = el('div', 'bcont'); cont.appendChild(chText(text)); b.appendChild(cont);
+    var meta = el('div', 'bmeta'); meta.appendChild(el('span', 'btm', '...')); b.appendChild(meta);
+    $('chmsgs').appendChild(b);
+    $('chempty').hidden = true;
+    $('chmsgs').scrollTop = $('chmsgs').scrollHeight;
+    return b;
+  }
+  function chSend(kind, text) {
+    if (CH.busy || !CH.on || CH.block || !CH.sw) return;
+    var ta = $('chtext');
+    text = String(text || ta.value || '').replace(/[ \t]+/g, ' ').trim();
+    if (!text) return;
+    var id = CH.id, c = CH.c, pend = chPending(text);
+    CH.busy = true; $('chsend').disabled = true; $('cherr').textContent = '';
+    if (!kind) { ta.value = ''; chGrow(); }
+    var body = { action: 'chat', pin: L.pin, id: id, message: text, api: true };
+    if (kind) body.kind = kind;
+    lapi(body).then(function (j) {
+      CH.busy = false; $('chsend').disabled = false;
+      if (!CH.on || id !== CH.id) return;
+      if (j.fallback) {                                      // nothing was sent and nothing was saved
+        if (pend.parentNode) pend.parentNode.removeChild(pend);
+        if (!kind) ta.value = text;
+        chGrow();
+        var why = WHY[j.reason] ? j.reason : 'error';
+        if (why === 'window') CH.open = false; else if (why === 'blocked') CH.block = true; else if (why === 'off') CH.sw = false; else CH.showWa = true;
+        $('cherr').textContent = T(WHY[why]);
+        chBar();
+        return;
+      }
+      var lead = c.r.lead;
+      lead.wa = (+j.wa) || ((+lead.wa || 0) + 1);
+      fillCard(c, lead);
+      CH.quiet = 0;
+      chLoad(false);
+    }).catch(function (err) {
+      CH.busy = false; $('chsend').disabled = false;
+      if (pend.parentNode) pend.parentNode.removeChild(pend);
+      if (!kind) ta.value = text;
+      chGrow();
+      if (!chFail(err)) $('cherr').textContent = TS(err.message);
+    });
+  }
+  $('chsend').onclick = function () { chSend('', ''); };
+  function chReminder() {                                   // after the 24 hours: the ready reminder (the server sends the template of Meta)
+    var lead = CH.c.r.lead;
+    chSend('Reminder', fillMsg((L.wa || {}).Reminder, lead) || (L.wa || {}).Reminder || 'Reminder');
+  }
+  function chOpenWa() {                                     // the way of v89: the WhatsApp of the girl
+    var c = CH.c;
+    if (!c) return;
+    var text = $('chtext').value.trim();
+    if (text) L.pendingChat = { id: c.dataset.id, t: Date.now(), text: text };
+    S.chat(cleanPhone(c.r.lead.phone), text);
+  }
+
+  // ---- open, read, close ----
+  function chFail(err) {                                    // true = handled here
+    if (err && err.bad && /code|pin/i.test(err.message)) { leadsLogout(); say('lgerr', T('Wrong code')); return true; }
+    if (err && err.bad && /not found/i.test(err.message)) {
+      toast(T('This driver is not yours any more.'));
+      layerDrop();
+      leadsRefresh();
+      return true;
+    }
+    return false;
+  }
+  function chSchedule() {
+    clearTimeout(CH.timer);
+    if (!CH.on) return;
+    CH.timer = setTimeout(function () { chLoad(false); }, CH.quiet >= 4 ? Math.round(CH_POLL * 2.3) : CH_POLL);
+  }
+  function chTake(j, first) {
+    CH.open = j.open !== false; CH.block = !!j.block; CH.sw = j.on !== false;
+    if (CH.netErr) { CH.netErr = false; $('cherr').textContent = ''; }
+    var lead = CH.c && CH.c.r.lead;
+    if (lead) { lead.unread = 0; lead.win = CH.open; lead.blk = CH.block; fillCard(CH.c, lead); }
+    var changed = chRender(Array.isArray(j.msgs) ? j.msgs : [], first);
+    CH.quiet = changed ? 0 : CH.quiet + 1;
+    chBar();
+    CH.rounds = 0;
+    chMediaPump();
+  }
+  function chLoad(first) {
+    if (!CH.on) return Promise.resolve();
+    if (CH.loading) { CH.again = true; return Promise.resolve(); }                      // a request is on its way: one more follows at once
+    if (!first && document.visibilityState === 'hidden') { chSchedule(); return Promise.resolve(); }
+    CH.loading = true;
+    var id = CH.id;
+    return lapi({ action: 'thread', pin: L.pin, id: id, read: true }).then(function (j) {
+      CH.loading = false;
+      if (CH.on && id === CH.id) chTake(j, first);
+    }).catch(function (err) {
+      CH.loading = false;
+      if (!chFail(err) && CH.on) { CH.netErr = true; $('cherr').textContent = TS(err.message); }
+    }).then(function () {
+      if (CH.again && CH.on) { CH.again = false; chLoad(false); } else chSchedule();
+    });
+  }
+  function chatOpen(c) {
+    if (CH.on) return;
+    var lead = c.r.lead;
+    CH.on = true; CH.id = String(lead.id); CH.c = c; CH.nodes = {}; CH.keys = []; CH.day = ''; CH.quiet = 0; CH.stick = true; CH.audio = null; CH.busy = false; CH.loading = false; CH.again = false; CH.mediaBusy = false; CH.rounds = 0; CH.netErr = false; CH.showWa = false;
+    CH.open = lead.win !== false; CH.block = !!lead.blk; CH.sw = true;
+    mediaForget(CH.id);
+    $('chmsgs').textContent = '';
+    $('chempty').hidden = true;
+    $('chnew').hidden = true;
+    var nmb = document.createElement('bdi'); nmb.textContent = String(lead.name || lead.phone || '');      // bdi: a Latin name does not push the line to the other side in an Arabic page
+    $('chname').textContent = ''; $('chname').appendChild(nmb);
+    $('chphone').textContent = String(lead.phone || '');
+    $('chadd').hidden = lead.tab === 'done' || lead.tab === 'closed';
+    $('chtext').value = ''; chGrow();
+    $('cherr').textContent = '';
+    chBar();
+    $('chatv').hidden = false;
+    document.body.classList.add('chatopen');
+    layerOpen(chatClosed);
+    chFit();
+    chLoad(true);
+  }
+  function chatClosed() {                                   // the chat went away (the arrow, the Back button of the phone, or a sign out)
+    if (!CH.on) return;
+    CH.on = false;
+    clearTimeout(CH.timer);
+    if (CH.audio) { try { CH.audio.pause(); } catch (e) { } CH.audio = null; }
+    $('chatv').hidden = true;
+    document.body.classList.remove('chatopen');
+    CH.nodes = {}; CH.keys = [];
+    $('chmsgs').textContent = '';
+    if (L.pin && TAB === 'leads' && $('lwho').hidden) leadsRefresh();
+  }
+  $('chback').onclick = function () { layerClose(1); };
+  $('chadd').onclick = function () { if (CH.c) addDriver(CH.c.r.lead, CH.c); };
+  function chatReset() {                                    // she signed out
+    LAY.length = 0;
+    if (CH.on) chatClosed();
+    PK.on = false; $('pickv').hidden = true;
+    $('imgv').hidden = true;
+    mediaForget();
+  }
+
+  // ---- the big picture ----
+  function imgOpen(url) {
+    $('imgbig').src = url;
+    $('imgv').hidden = false;
+    layerOpen(imgClosed);
+  }
+  function imgClosed() { $('imgv').hidden = true; $('imgbig').removeAttribute('src'); }
+  $('imgv').onclick = function () { layerClose(1); };
+
+  // ---- Add driver: she chooses the photos of the chat (all of them are ticked, up to 10) ----
+  function pickOpen(lead) {
+    PK = { on: true, id: String(lead.id), lead: lead, items: [], sel: {} };
+    $('pkgrid').textContent = '';
+    $('pkempty').hidden = true; $('pkload').hidden = false; $('pkerr').textContent = '';
+    $('pkhint').hidden = true;
+    $('pkgo').hidden = false; $('pkgo').disabled = true; $('pkgo').textContent = T('Add driver');
+    $('pickv').hidden = false;
+    layerOpen(pickClosed);
+    chFit();
+    pickLoad();
+  }
+  function pickClosed() { PK.on = false; $('pickv').hidden = true; }
+  $('pkback').onclick = function () { layerClose(1); };
+  function pickEmpty(text) {
+    $('pkload').hidden = true;
+    $('pkgo').hidden = true;
+    $('pkempty').textContent = T(text);
+    $('pkempty').hidden = false;
+  }
+  function pickLegacy() {                                   // no photo in the chat: the photos that were kept on the card before (the way of v89)
+    var id = PK.id, lead = PK.lead;
+    if (!(+lead.photos > 0)) { pickEmpty('No photos in the chat. Photos stay in the chat for 7 days.'); return; }
+    lapi({ action: 'photos', pin: L.pin, id: id }).then(function (j) {
+      if (!PK.on || PK.id !== id) return;
+      var files = (j.photos || []).map(b64file);
+      if (!files.length) { pickEmpty('No photos in the chat. Photos stay in the chat for 7 days.'); return; }
+      pickFinish(files);
+    }).catch(function (err) { if (!chFail(err)) { $('pkload').hidden = true; $('pkerr').textContent = TS(err.message); } });
+  }
+  function pickLoad() {
+    var id = PK.id;
+    lapi({ action: 'thread', pin: L.pin, id: id }).then(function (j) {
+      if (!PK.on || PK.id !== id) return;
+      var imgs = (j.msgs || []).filter(function (m) { return m.ty === 'image' && m.f; }).slice(-12);
+      if (!imgs.length) { pickLegacy(); return; }
+      return chMediaLoad(imgs.map(function (m) { return m.k; }), id).then(function () {
+        if (!PK.on || PK.id !== id) return;
+        pickPaint(imgs);
+      });
+    }).catch(function (err) { if (!chFail(err)) { $('pkload').hidden = true; $('pkerr').textContent = TS(err.message); } });
+  }
+  function pickCount() {
+    var n = PK.items.filter(function (m) { return PK.sel[m.k]; }).length;
+    $('pkgo').disabled = n === 0;
+    $('pkgo').textContent = n ? T('Add driver ({n})', { n: n }) : T('Add driver');
+    Array.prototype.forEach.call($('pkgrid').children, function (t) { t.classList.toggle('on', !!PK.sel[t.dataset.k]); });
+    return n;
+  }
+  function pickPaint(imgs) {
+    var id = PK.id, items = imgs.filter(function (m) { var md = mediaGet(id, m.k); return md && md.url; });
+    if (!items.length) { pickLegacy(); return; }
+    PK.items = items;
+    var start = Math.max(0, items.length - MAXP);          // more than 10: the newest 10 are ticked
+    items.forEach(function (m, i) { PK.sel[m.k] = i >= start; });
+    var grid = $('pkgrid');
+    grid.textContent = '';
+    items.forEach(function (m) {
+      var md = mediaGet(id, m.k);
+      var t = el('button', 'pth'); t.type = 'button'; t.dataset.k = m.k;
+      var im = new Image(); im.alt = ''; im.src = md.url; t.appendChild(im);
+      t.appendChild(el('span', 'pck', '\u2713'));
+      t.onclick = function () {
+        var on = !PK.sel[m.k];
+        if (on && PK.items.filter(function (x) { return PK.sel[x.k]; }).length >= MAXP) { $('pkerr').textContent = T('You can add up to {n} photos.', { n: MAXP }); return; }
+        $('pkerr').textContent = '';
+        PK.sel[m.k] = on;
+        pickCount();
+      };
+      grid.appendChild(t);
+    });
+    $('pkload').hidden = true;
+    $('pkhint').hidden = false;
+    pickCount();
+  }
+  $('pkgo').onclick = function () {
+    var id = PK.id;
+    var files = PK.items.filter(function (m) { return PK.sel[m.k]; }).map(function (m) { var md = mediaGet(id, m.k); return md && md.file; }).filter(function (f) { return !!f; });
+    if (!files.length) return;
+    pickFinish(files);
+  };
+  $('pkphone').onclick = function () {                      // photos that are not in the chat: the gallery of the phone
+    var lead = PK.lead;
+    layerDrop();
+    startDriver(lead, []);
+    try { $('file').click(); } catch (e) { }
+  };
+  function pickFinish(files) {
+    var lead = PK.lead;
+    layerDrop();
+    startDriver(lead, files);
+  }
+
   // ---- notifications (the button shows only when the manager has set them up) ----
   function b64u(s) {
     var p = (s + '===='.slice(s.length % 4 || 4)).replace(/-/g, '+').replace(/_/g, '/');
@@ -2559,24 +3710,50 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
     return out;
   }
+  // The button shows while this phone is not registered (or the server lost it). When the permission was given already, the page registers the phone by itself.
+  function pushCan() { return L.on && !!(L.vapid || store('leadsVapid')) && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; }
   function notifyInit() {
-    var can = L.on && !!(L.vapid || store('leadsVapid')) && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && store('leadsPush') !== '1' && Notification.permission !== 'denied';
-    $('lnotify').hidden = !can;
+    var ok = pushCan(), denied = ok && Notification.permission === 'denied';
+    $('lnotify').hidden = !(ok && !denied && (store('leadsPush') !== '1' || L.push === 0));
+    $('lnblock').hidden = !denied;
+  }
+  function sameKey(sub, key) {                             // a phone registered with an older key of the manager does not get messages any more
+    try {
+      var k = sub.options && sub.options.applicationServerKey;
+      if (!k) return false;
+      var a = new Uint8Array(k), c = b64u(key);
+      if (a.length !== c.length) return false;
+      for (var i = 0; i < a.length; i++) if (a[i] !== c[i]) return false;
+      return true;
+    } catch (e) { return false; }
+  }
+  function subscribeNow(vapid) {
+    return navigator.serviceWorker.ready.then(function (reg) {
+      return reg.pushManager.getSubscription().then(function (old) {
+        if (old && sameKey(old, vapid)) return old;
+        var go = function () { return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(vapid) }); };
+        return old ? old.unsubscribe().then(go, go) : go();
+      });
+    }).then(function (sub) { return lapi({ action: 'push', pin: L.pin, subscription: sub.toJSON() }); });
+  }
+  function pushSync() {
+    notifyInit();
+    var vapid = L.vapid || store('leadsVapid');
+    if (L.synced || !pushCan() || !vapid || !L.pin || Notification.permission !== 'granted') return;
+    L.synced = true;
+    subscribeNow(vapid).then(function () { store('leadsPush', '1'); L.push = Math.max(L.push, 1); notifyInit(); }).catch(function () { });
   }
   $('lnotify').onclick = function () {
     var vapid = L.vapid || store('leadsVapid');
     if (!vapid) { say('lerr', T('Notifications are not ready. Tell the manager.')); return; }
     Notification.requestPermission().then(function (p) {
       if (p !== 'granted') throw new Error('Notifications are off. Allow them in the phone settings.');
-      return navigator.serviceWorker.ready;
-    }).then(function (reg) {
-      return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(vapid) });
-    }).then(function (sub) {
-      return lapi({ action: 'push', pin: L.pin, subscription: sub.toJSON() });
+      return subscribeNow(vapid);
     }).then(function () {
-      store('leadsPush', '1');
+      store('leadsPush', '1'); L.push = Math.max(L.push, 1); L.synced = true;
       say('lerr', '');
       notifyInit();
+      toast(T('Notifications are on \u2713'));
     }).catch(function (err) { say('lerr', err && err.message ? TS(err.message) : T('Could not turn on notifications.')); });
   };
 
@@ -2586,7 +3763,7 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
     document.body.classList.add('leadson');
     var lk = document.createElement('link'); lk.rel = 'manifest'; lk.href = 'manifest.webmanifest'; document.head.appendChild(lk);
     var ai = document.createElement('link'); ai.rel = 'apple-touch-icon'; ai.href = 'icon-192.png'; document.head.appendChild(ai);
-    L.pin = store('leadsPin'); L.agent = store('leadsAgent'); L.vapid = store('leadsVapid'); L.last = store('leadsLast');
+    L.pin = store('leadsPin'); L.agent = store('leadsAgent'); L.vapid = store('leadsVapid'); L.last = store('leadsLast'); L.duty = store('leadsDuty') !== '0';
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(function () { });
       navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'open-leads') setTab('leads'); });
