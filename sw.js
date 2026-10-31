@@ -30,7 +30,7 @@ self.addEventListener('fetch', function (e) {
 self.addEventListener('push', function (e) {
   var d = {};
   try { d = e.data ? e.data.json() : {}; } catch (err) { try { d = { body: e.data.text() }; } catch (err2) { } }
-  e.waitUntil(self.registration.showNotification(d.title || 'TechFlex', { body: d.body || '', icon: 'icon-192.png', tag: 'tf-leads' }));
+  e.waitUntil(self.registration.showNotification(d.title || 'TechFlex', { body: d.body || '', icon: 'icon-192.png', badge: 'icon-192.png', tag: 'tf-' + Date.now(), vibrate: [200, 100, 200], dir: 'auto' }));
 });
 
 self.addEventListener('notificationclick', function (e) {
