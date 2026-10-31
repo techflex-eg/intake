@@ -386,7 +386,7 @@ body.chatopen { overflow: hidden; }
 <body>
 <header>
   <div class="hrow">
-    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v90</span></div></div>
+    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v90.2</span></div></div>
     <div class="hbtns"><button type="button" class="hb" id="lang" aria-label="Language"></button><button type="button" class="hb" id="theme" aria-label="Day or night"></button><button type="button" class="hb" id="out" hidden>Sign out</button></div>
   </div>
     <div id="tabs" hidden><button type="button" id="tabL" class="on">Leads</button><button type="button" id="tabD">New driver</button><button type="button" id="tabW">My wallet</button></div>
@@ -2085,9 +2085,10 @@ body.chatopen { overflow: hidden; }
   // When it is empty nothing of this shows and the page works as it did before (with the access code of the manager).
   // ONE code for the whole page: the 4-digit code of the girl (the Agents tab of the Call Center sheet) opens the leads and New driver.
   var LEADS_URL = String(LEADS_API_URL || CFG.leadsUrl || '').trim();
-  var L = { on: !!LEADS_URL && !/^PASTE/.test(LEADS_URL), waOn: false, pin: '', agent: '', duty: true, close: 22, push: -1, synced: false, loaded: false, dutyBusy: false, epoch: 0, tab: '', tabSet: false, tabs: {}, counts: {}, dueN: {}, done: 0, remaining: 0, wa: {}, cards: {}, open: {}, pending: null, busyList: false, shared: null, wantWho: false, last: '', vapid: '', called: {}, tries: {}, waTries: {}, chatTries: {}, pendingChat: null, pendingRes: null, logging: false };
+  var L = { on: !!LEADS_URL && !/^PASTE/.test(LEADS_URL), waOn: false, pin: '', agent: '', duty: true, close: 22, push: -1, synced: false, loaded: false, dutyBusy: false, epoch: 0, tab: '', tabSet: false, tabs: {}, counts: {}, dueN: {}, done: 0, remaining: 0, wa: {}, cards: {}, open: {}, pending: null, busyList: false, shared: null, wantWho: false, last: '', vapid: '', called: {}, waTries: {}, chatTries: {}, pendingChat: null, pendingRes: null, resume: null, logging: false };
   var LEADS_EVERY = CFG.leadsEvery || 30000;
   var WA_MIN_MS = CFG.waMinMs || 8000;          // she must stay in WhatsApp at least this long after she taps Send on WhatsApp (the second short try is accepted, the manager sees it as Short)
+  var PEND_KEY = 'leadsPend', PEND_MAX_MS = 6 * 3600000;      // a call that waits for her to come back is kept on the phone; one older than 6 hours is dropped
   var CALL_MIN_MS = CFG.callMinMs || 16000;      // a call shorter than this did not happen (the phone only opened and closed). In Egypt the first ring comes after 3 to 5 seconds, a driver answers after 3 or 4 rings.
 
   S.dial = function (number) { window.location.href = 'tel:' + number; };      // opens the phone dialer (a test can replace it)
@@ -2278,11 +2279,11 @@ body.chatopen { overflow: hidden; }
     });
   };
   function leadsLogout() {
-    L.pin = ''; L.agent = ''; L.tabs = {}; L.counts = {}; L.dueN = {}; L.cards = {}; L.open = {}; L.called = {}; L.tries = {}; L.waTries = {}; L.pending = null; L.pendingRes = null; L.pendingChat = null; L.loaded = false; L.tabSet = false; L.tab = ''; L.duty = true; L.epoch++; L.push = -1; L.synced = false; L.waOn = false;
+    L.pin = ''; L.agent = ''; L.tabs = {}; L.counts = {}; L.dueN = {}; L.cards = {}; L.open = {}; L.called = {}; L.waTries = {}; L.pending = null; L.pendingRes = null; L.pendingChat = null; L.loaded = false; L.tabSet = false; L.tab = ''; L.duty = true; L.epoch++; L.push = -1; L.synced = false; L.waOn = false;
     chatReset();
     $('llist').innerHTML = '';
     armReset();
-    store('leadsPin', ''); store('leadsAgent', '');
+    store('leadsPin', ''); store('leadsAgent', ''); store(PEND_KEY, ''); L.resume = null;
     S.code = ''; S.info = null; S.step = 'gate';
     resetDriver();
     say('lerr', '');
@@ -2340,6 +2341,7 @@ body.chatopen { overflow: hidden; }
     if (was === false && L.duty) L.tabSet = false;                         // she just started: the tab is chosen again
     if (was !== false && !L.duty && L.loaded && !L.dutyBusy) toast(T('You were switched OFF'));      // the end of the day, or the manager did it
     L.loaded = true;
+    if (+j.realCallMs > CALL_MIN_MS) CALL_MIN_MS = +j.realCallMs;          // the server decides what a real call is: the page is never looser (an old number in config.js cannot open a card for a call that the server counts as a Try)
     L.waOn = j.waOn === true;                                              // the one chat is connected and switched on (the server says so)
     L.close = +j.close || L.close;
     L.push = +j.push || 0;
@@ -2369,6 +2371,7 @@ body.chatopen { overflow: hidden; }
       takeList(j);
       renderLeads();
       pushSync();
+      if (L.resume) { var rp = L.resume; L.resume = null; settleCall(rp, rp.back); }      // the phone closed the app during the call: it is judged now, from the moment the app was hidden to the moment it opened again
     }).catch(function (err) {
       L.busyList = false;
       if (err.bad && /code|pin/i.test(err.message)) { leadsLogout(); say('lgerr', T('Wrong code')); return; }
@@ -2967,10 +2970,36 @@ body.chatopen { overflow: hidden; }
   }
 
   // ---- the call: the page goes away, then comes back ----
-  // A call is real when she was away from the page for CALL_MIN_MS or more. A shorter time = the dialer opened and closed: the result menu stays closed and she is asked to call again.
-  // The second short try opens the menu anyway (so she is never stuck). The server keeps the same rule and writes Call or Try in its Log with the seconds.
+  // The clock of a call starts when the page REALLY goes away (the app is hidden), not when the button is pressed: the seconds must be spent OUTSIDE the app.
+  // (Only if the page never told us that it was hidden, the moment of the press is used, so a phone that does not tell us is not blocked.)
+  // The call that waits for her to come back is also kept on the phone, but only after the page was really hidden: some phones close the app while she talks (low memory).
+  // When the app opens again that call is judged exactly as if the app had never closed (see leadsInit and leadsRefresh).
+  function pendSave() { store(PEND_KEY, L.pending && L.pending.h ? JSON.stringify({ id: L.pending.id, t: L.pending.t, h: L.pending.h, via: L.pending.via }) : ''); }
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden' && L.pending && !L.pending.h) { L.pending.h = Date.now(); pendSave(); }
+  });
+  // The judgment of a call, at the moment she is back (now = that moment, taken the instant the page became visible).
+  function settleCall(p, now) {
+    var id = String(p.id), away = now - (p.h || p.t);      // the time OUTSIDE the app (from the moment the page was hidden)
+    var c = L.cards[id];
+    if (c) c.r.call.textContent = T('Call');
+    var real = away >= CALL_MIN_MS;                      // only the time outside the app decides; a short return is cancelled (no memory of it is kept)
+    if (real) {
+      L.called[id] = true; L.open[id] = true; L.last = id;
+      store('leadsLast', L.last);
+      if (c) { showHint(c, ''); fillCard(c, c.r.lead); if (!c.r.tl.hidden) loadHistory(c); }
+    } else if (c) {
+      showHint(c, T(p.via === 'wa' ? 'WhatsApp did not open. Press WhatsApp again.' : 'The call did not happen. Press Call again.'), true);
+    }
+    applyOpen();
+    lapi({ action: real ? 'call' : 'try', pin: L.pin, id: p.id, startedAt: new Date(p.t).toISOString(), awayMs: away, via: p.via === 'wa' ? 'wa' : 'call' }).catch(function () { });
+  }
+  // A call is real when she stayed OUTSIDE the app for CALL_MIN_MS or more. If she comes back before that (the call failed, or the phone brought the app back by itself):
+  // NOTHING is counted, the result menu stays closed, the count is cancelled and she is asked to call again; the next press starts from zero.
+  // There is no second chance: a short return never opens the card. The server keeps the same rule: a real call is sent as "call", a short one as "try" (it only writes Try in the Log with the seconds).
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState !== 'visible' || !L.on) return;
+    var returnedAt = Date.now();                                        // the instant she is back: the call is judged by this moment, and pressing Home right after changes nothing
     if (CH.on) { CH.quiet = 0; chLoad(false); }                         // she comes back to the phone: the chat is read at once
     if (L.pendingChat) {
       var q2 = L.pendingChat, id2 = String(q2.id), aw2 = Date.now() - q2.t, c2 = L.cards[id2];
@@ -2992,21 +3021,10 @@ body.chatopen { overflow: hidden; }
       }
     }
     if (L.pending) {
-      var p = L.pending, id = String(p.id), away = Date.now() - p.t;
+      var p = L.pending;
       L.pending = null;
-      var c = L.cards[id];
-      if (c) c.r.call.textContent = T('Call');
-      var real = away >= CALL_MIN_MS || (L.tries[id] || 0) >= 1;
-      if (real) {
-        L.tries[id] = 0; L.called[id] = true; L.open[id] = true; L.last = id;
-        store('leadsLast', L.last);
-        if (c) { showHint(c, ''); fillCard(c, c.r.lead); if (!c.r.tl.hidden) loadHistory(c); }
-      } else {
-        L.tries[id] = (L.tries[id] || 0) + 1;
-        if (c) showHint(c, T(p.via === 'wa' ? 'WhatsApp did not open. Press WhatsApp again.' : 'The call did not happen. Press Call again.'), true);
-      }
-      applyOpen();
-      lapi({ action: 'call', pin: L.pin, id: p.id, startedAt: new Date(p.t).toISOString(), awayMs: away, via: p.via === 'wa' ? 'wa' : 'call' }).catch(function () { });
+      pendSave();                                          // judged now: nothing stays on the phone
+      settleCall(p, returnedAt);
     }
     if (TAB === 'leads' && L.pin && $('lwho').hidden) leadsRefresh();
   });
@@ -3764,6 +3782,12 @@ body.chatopen { overflow: hidden; }
     var lk = document.createElement('link'); lk.rel = 'manifest'; lk.href = 'manifest.webmanifest'; document.head.appendChild(lk);
     var ai = document.createElement('link'); ai.rel = 'apple-touch-icon'; ai.href = 'icon-192.png'; document.head.appendChild(ai);
     L.pin = store('leadsPin'); L.agent = store('leadsAgent'); L.vapid = store('leadsVapid'); L.last = store('leadsLast'); L.duty = store('leadsDuty') !== '0';
+    // A call was waiting when the phone closed the app (low memory, a long call): when the app opens again it is judged from the moment the app was hidden. It is used once.
+    try {
+      var sp = JSON.parse(store(PEND_KEY) || 'null'), up = Date.now();
+      if (sp && L.pin && sp.id && +sp.h > 0 && up - sp.h >= 0 && up - sp.h < PEND_MAX_MS) L.resume = { id: String(sp.id), t: +sp.t || +sp.h, h: +sp.h, via: sp.via === 'wa' ? 'wa' : 'call', back: up };
+    } catch (e) { }
+    store(PEND_KEY, '');
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(function () { });
       navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'open-leads') setTab('leads'); });
