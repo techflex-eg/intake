@@ -386,7 +386,7 @@ body.chatopen { overflow: hidden; }
 <body>
 <header>
   <div class="hrow">
-    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v93</span></div></div>
+    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v94</span></div></div>
     <div class="hbtns"><button type="button" class="hb" id="lang" aria-label="Language"></button><button type="button" class="hb" id="theme" aria-label="Day or night"></button><button type="button" class="hb" id="out" hidden>Sign out</button></div>
   </div>
     <div id="tabs" hidden><button type="button" id="tabL" class="on">Leads</button><button type="button" id="tabD">New driver</button><button type="button" id="tabW">My wallet</button></div>
@@ -685,6 +685,11 @@ body.chatopen { overflow: hidden; }
     'History': '\u0627\u0644\u0633\u062c\u0644',
     'WhatsApp did not open. Press Send again.': '\u0648\u0627\u062a\u0633\u0627\u0628 \u0645\u0627\u062a\u0641\u062a\u062d\u0634. \u0627\u0636\u063a\u0637\u064a \u00ab\u0627\u0628\u0639\u062a\u064a \u0639\u0644\u0649 \u0627\u0644\u0648\u0627\u062a\u0633\u0627\u0628\u00bb \u062a\u0627\u0646\u064a.',
     'Active': '\u0623\u0643\u062a\u064a\u0641',
+    'Waiting for Active': '\u0645\u0633\u062a\u0646\u064a \u0627\u0644\u062a\u0641\u0639\u064a\u0644',
+    'Attend': '\u062d\u0636\u0631 \u0627\u0644\u062f\u0627\u064a \u0632\u064a\u0631\u0648',
+    'Waiting for Day0': '\u0645\u0633\u062a\u0646\u064a \u0627\u0644\u062f\u0627\u064a \u0632\u064a\u0631\u0648',
+    'Absent': '\u063a\u0627\u0628 \u0639\u0646 \u0627\u0644\u062f\u0627\u064a \u0632\u064a\u0631\u0648',
+    'Rescheduled': '\u0627\u062a\u0623\u062c\u0644',
     'Loading...': '\u0628\u062d\u0645\u0651\u0644...',
     'Nothing yet.': '\u0644\u0633\u0647 \u0645\u0641\u064a\u0634 \u062d\u0627\u062c\u0629.',
     'Cancel': '\u0625\u0644\u063a\u0627\u0621',
@@ -2225,6 +2230,7 @@ body.chatopen { overflow: hidden; }
 
   // ---- the wallet ----
   function money(n) { return T('{n} EGP', { n: String(Math.round(+n || 0)) }); }
+  function stageT(st) { return T(st === 'Waiting' ? 'Waiting for Day0' : st); }      // the stage of the driver in the Onboarding file
   var WTYPE = { Call: 'Call payment', Active: 'Active driver', Bonus: 'Bonus', Advance: 'Advance', Payout: 'Payout', Reversal: 'Correction' };
   var WSTAT = { 'Not confirmed': 'Not confirmed', Confirmed: 'Confirmed', 'Paid out': 'Paid out', Cancelled: 'Cancelled', Requested: 'Waiting for the manager', Approved: 'Approved', Rejected: 'Not approved' };
   var WREQ = { Pending: 'Waiting for the manager', Approved: 'Approved. The manager will pay it.', Paid: 'The advance was paid.', Rejected: 'Not approved' };
@@ -2856,7 +2862,7 @@ body.chatopen { overflow: hidden; }
       t = ld.due ? T('Call him back now') : T('next call {t}', { t: fmtWhen(ld.next) });
       cls = ld.due ? 'n-hot' : 'n-wait';
     } else if (tab === 'done') {
-      t = T('Registered') + (ld.code ? ' \u00b7 ' + ld.code : '') + (ld.active ? ' \u00b7 ' + T('Active') : '');
+      t = T('Registered') + (ld.code ? ' \u00b7 ' + ld.code : '') + (ld.active ? ' \u00b7 ' + T('Active') : (ld.stage ? ' \u00b7 ' + stageT(ld.stage) : ''));
       cls = 'n-ok';
     } else if (tab === 'closed') {
       var rs = reasonText(ld.closeReason);
@@ -2894,7 +2900,8 @@ body.chatopen { overflow: hidden; }
     r.chCalls.textContent = T('Calls {n}', { n: nc }); r.chCalls.hidden = !(nc > 0);
     r.chWa.textContent = T('WhatsApp {n}', { n: nw }); r.chWa.hidden = !(nw > 0);
     r.chCode.textContent = String(ld.code || ''); r.chCode.hidden = !ld.code;
-    r.chAct.textContent = T('Active'); r.chAct.hidden = !ld.active;
+    r.chAct.textContent = ld.active ? T('Active') : (ld.stage ? stageT(ld.stage) : ''); r.chAct.hidden = !(ld.active || ld.stage);
+    r.chAct.className = ld.active ? 'badge ph' : (ld.stage === 'Waiting for Active' ? 'badge hot' : 'badge soft');
     var n = +ld.photos || 0;
     r.pics.textContent = n + (n === 1 ? ' photo' : ' photos');
     r.pics.parentNode.hidden = !(n > 0);
