@@ -386,7 +386,7 @@ body.chatopen { overflow: hidden; }
 <body>
 <header>
   <div class="hrow">
-    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v90.2</span></div></div>
+    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v91</span></div></div>
     <div class="hbtns"><button type="button" class="hb" id="lang" aria-label="Language"></button><button type="button" class="hb" id="theme" aria-label="Day or night"></button><button type="button" class="hb" id="out" hidden>Sign out</button></div>
   </div>
     <div id="tabs" hidden><button type="button" id="tabL" class="on">Leads</button><button type="button" id="tabD">New driver</button><button type="button" id="tabW">My wallet</button></div>
@@ -880,6 +880,10 @@ body.chatopen { overflow: hidden; }
     'Wrong code': '\u0627\u0644\u0643\u0648\u062f \u063a\u0644\u0637',
     'Too many wrong codes. Try again in ten minutes.': '\u0645\u062d\u0627\u0648\u0644\u0627\u062a \u063a\u0644\u0637 \u0643\u062a\u064a\u0631. \u062c\u0631\u0651\u0628\u064a \u062a\u0627\u0646\u064a \u0628\u0639\u062f 10 \u062f\u0642\u0627\u064a\u0642.',
     'Too many tries. Wait 30 minutes.': '\u0645\u062d\u0627\u0648\u0644\u0627\u062a \u0643\u062a\u064a\u0631. \u0627\u0633\u062a\u0646\u064a 30 \u062f\u0642\u064a\u0642\u0629.',
+    'Too many tries. Wait 15 minutes.': '\u0645\u062d\u0627\u0648\u0644\u0627\u062a \u0643\u062a\u064a\u0631. \u0627\u0633\u062a\u0646\u064a 15 \u062f\u0642\u064a\u0642\u0629.',
+    'Please try again in a few minutes.': '\u062c\u0631\u0651\u0628\u064a \u062a\u0627\u0646\u064a \u0628\u0639\u062f \u0643\u0627\u0645 \u062f\u0642\u064a\u0642\u0629.',
+    'Please try again.': '\u062c\u0631\u0651\u0628\u064a \u062a\u0627\u0646\u064a.',
+    'Bad notification data.': '\u062d\u0635\u0644\u062a \u0645\u0634\u0643\u0644\u0629. \u062c\u0631\u0651\u0628\u064a \u062a\u0627\u0646\u064a.',
     'The access code is not set. Tell the manager.': '\u0643\u0648\u062f \u0627\u0644\u062f\u062e\u0648\u0644 \u0645\u0634 \u0645\u062a\u0638\u0628\u0637. \u0643\u0644\u0645\u064a \u0627\u0644\u0645\u062f\u064a\u0631.',
     'The AI gave no answer.': '\u0627\u0644\u0642\u0631\u0627\u0621\u0629 \u0627\u0644\u0630\u0643\u064a\u0629 \u0645\u0627\u0631\u062f\u062a\u0634. \u062c\u0631\u0651\u0628\u064a \u062a\u0627\u0646\u064a.',
     'The AI answer could not be read.': '\u0627\u0644\u0642\u0631\u0627\u0621\u0629 \u0627\u0644\u0630\u0643\u064a\u0629 \u0645\u0627\u0631\u062f\u062a\u0634 \u0643\u0648\u064a\u0633. \u062c\u0631\u0651\u0628\u064a \u062a\u0627\u0646\u064a.',
@@ -2099,14 +2103,49 @@ body.chatopen { overflow: hidden; }
     if (d.indexOf('0') === 0) return '20' + d.slice(1);
     return d;
   }
-  function lapi(body) {
+  // ---- v91: the id of this phone, the seconds since she touched the screen, and the ping ----
+  // The id is made once and kept on the phone. The server uses it so that a wrong code on one phone does not lock the other girls,
+  // and the token that the server gives back after a good sign-in tells the server that this phone was signed in before.
+  // Every request carries the id, the token and the idle seconds; a quiet app sends a small ping (see pingTick), so the office knows which accounts are open.
+  var DEV_RE = /^[A-Za-z0-9]{8,40}$/;
+  function newDevId() {
+    var abc = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', out = '', i;
+    try {
+      var u = new Uint8Array(24);
+      (window.crypto || window.msCrypto).getRandomValues(u);
+      for (i = 0; i < 24; i++) out += abc.charAt(u[i] % abc.length);
+    } catch (e) {
+      out = '';
+      for (i = 0; i < 24; i++) out += abc.charAt(Math.floor(Math.random() * abc.length));
+    }
+    return out;
+  }
+  var DEV = store('leadsDev');
+  if (!DEV_RE.test(DEV)) { DEV = newDevId(); store('leadsDev', DEV); }
+  var TOK = store('leadsTok');
+  var lastTouch = Date.now(), lastSent = 0, pingOff = false;
+  var PING_EVERY = CFG.pingEvery || 30000;
+  function touched() { lastTouch = Date.now(); }
+  ['touchstart', 'pointerdown', 'mousedown', 'keydown', 'input', 'scroll'].forEach(function (ev) { document.addEventListener(ev, touched, true); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') touched(); });      // she opened the app: that is a touch. This listener is the first one, so the first request after she is back already says idle = 0.
+  function idleSec() { return Math.max(0, Math.round((Date.now() - lastTouch) / 1000)); }
+  function lapi(body, keepalive) {
     var ctl = window.AbortController ? new AbortController() : null;
     var late = false;
     var timer = ctl ? setTimeout(function () { late = true; ctl.abort(); }, 45000) : null;
-    return fetch(LEADS_URL, { method: 'POST', body: JSON.stringify(body), signal: ctl ? ctl.signal : undefined })
+    var req = {};
+    Object.keys(body).forEach(function (k) { req[k] = body[k]; });
+    req.dev = DEV;
+    if (TOK) req.tok = TOK;
+    req.idle = idleSec();
+    lastSent = Date.now();
+    var opt = { method: 'POST', body: JSON.stringify(req), signal: ctl ? ctl.signal : undefined };
+    if (keepalive) opt.keepalive = true;      // a call: the app goes to the background right after, the request must still reach the server
+    return fetch(LEADS_URL, opt)
       .then(function (res) { return res.json(); })
       .then(function (j) {
         clearTimeout(timer);
+        if (j && j.ok && j.tok) { TOK = String(j.tok); store('leadsTok', TOK); }
         if (!j || !j.ok) { var e = new Error((j && j.error) || 'Something went wrong.'); e.bad = true; throw e; }
         return j;
       }, function (err) {
@@ -2261,7 +2300,7 @@ body.chatopen { overflow: hidden; }
     lapi({ action: 'login', pin: pin }).then(function (j) {
       L.logging = false;
       $('lstart').disabled = false;
-      L.pin = pin;
+      L.pin = pin; pingOff = false; touched();
       L.agent = String((j.agent && j.agent.name) || '');
       L.vapid = String(j.vapidPublicKey || '');
       L.duty = j.duty !== false; setDutyStore(); L.tabSet = false; L.loaded = false;
@@ -2274,7 +2313,7 @@ body.chatopen { overflow: hidden; }
     }).catch(function (err) {
       L.logging = false;
       $('lstart').disabled = false;
-      say('lgerr', err.bad ? T('Wrong code') : TS(err.message));
+      say('lgerr', err.bad && /^wrong code/i.test(err.message) ? T('Wrong code') : TS(err.message));      // v91: a locked phone is told to wait
       if (err.bad) { var bx = pinBoxes(); bx.forEach(function (b) { b.value = ''; }); bx[0].focus(); }
     });
   };
@@ -2759,6 +2798,7 @@ body.chatopen { overflow: hidden; }
       showHint(c, '');
       bc.textContent = T('Calling...');
       setTimeout(function () { bc.textContent = T('Call'); }, 6000);
+      awayPing();
       S.dial(cleanPhone(lead.phone));
     };
     ba.onclick = function () { addDriver(c.r.lead, c); };
@@ -3031,6 +3071,24 @@ body.chatopen { overflow: hidden; }
   setInterval(function () {
     if (L.on && TAB === 'leads' && L.pin && document.visibilityState === 'visible' && $('lwho').hidden) leadsRefresh();
   }, LEADS_EVERY);
+
+  // ---- v91: the ping. The office sees which accounts are open and for how long. It is a very small request; any other request counts as a ping too.
+  // The first answer 'wrong code' (the manager changed her code) stops the pings until she signs in again; the list shows her the sign-in.
+  function pingTick() {
+    if (!L.on || !L.pin || pingOff || document.visibilityState !== 'visible') return;
+    if (Date.now() - lastSent < PING_EVERY * 0.8) return;       // a request went a moment ago: it was the ping
+    lapi({ action: 'ping', pin: L.pin }).catch(function (err) { if (err && err.bad && /^wrong code/i.test(err.message)) pingOff = true; });
+  }
+  setInterval(pingTick, PING_EVERY);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState !== 'visible') return;
+    setTimeout(pingTick, 1500);                                 // a list or a result goes first; then a ping only if nothing went for a while
+  });
+  // She pressed Call: the app goes to the background. keepalive lets this small request reach the server after the page is hidden.
+  function awayPing() {
+    if (!L.on || !L.pin || pingOff) return;
+    lapi({ action: 'away', pin: L.pin }, true).catch(function () { });
+  }
 
   // ---- Add driver: the New driver flow, filled from the lead ----
   function resetDriver() {
