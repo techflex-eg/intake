@@ -386,7 +386,7 @@ body.chatopen { overflow: hidden; }
 <body>
 <header>
   <div class="hrow">
-    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v91</span></div></div>
+    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v92</span></div></div>
     <div class="hbtns"><button type="button" class="hb" id="lang" aria-label="Language"></button><button type="button" class="hb" id="theme" aria-label="Day or night"></button><button type="button" class="hb" id="out" hidden>Sign out</button></div>
   </div>
     <div id="tabs" hidden><button type="button" id="tabL" class="on">Leads</button><button type="button" id="tabD">New driver</button><button type="button" id="tabW">My wallet</button></div>
@@ -2123,7 +2123,7 @@ body.chatopen { overflow: hidden; }
   var DEV = store('leadsDev');
   if (!DEV_RE.test(DEV)) { DEV = newDevId(); store('leadsDev', DEV); }
   var TOK = store('leadsTok');
-  var lastTouch = Date.now(), lastSent = 0, pingOff = false;
+  var lastTouch = Date.now(), lastSent = 0, lastVis = 1, pingOff = false;
   var PING_EVERY = CFG.pingEvery || 30000;
   function touched() { lastTouch = Date.now(); }
   ['touchstart', 'pointerdown', 'mousedown', 'keydown', 'input', 'scroll'].forEach(function (ev) { document.addEventListener(ev, touched, true); });
@@ -2138,6 +2138,8 @@ body.chatopen { overflow: hidden; }
     req.dev = DEV;
     if (TOK) req.tok = TOK;
     req.idle = idleSec();
+    if (req.vis === undefined) req.vis = document.visibilityState === 'hidden' ? 0 : 1;      // v92: the office sees when the screen is off
+    lastVis = req.vis;
     lastSent = Date.now();
     var opt = { method: 'POST', body: JSON.stringify(req), signal: ctl ? ctl.signal : undefined };
     if (keepalive) opt.keepalive = true;      // a call: the app goes to the background right after, the request must still reach the server
@@ -2176,6 +2178,7 @@ body.chatopen { overflow: hidden; }
       return;
     }
     outReset();
+    if (L.on && L.pin && !pingOff) lapi({ action: 'bye', pin: L.pin }, true).catch(function () { });      // v92: the office sees "Closed" at once
     leadsLogout();
   };
   document.addEventListener('click', function (e) {      // every button answers at once: it flashes
@@ -3073,6 +3076,7 @@ body.chatopen { overflow: hidden; }
   }, LEADS_EVERY);
 
   // ---- v91: the ping. The office sees which accounts are open and for how long. It is a very small request; any other request counts as a ping too.
+  // (v92: the office also hears when the screen goes away or comes back, and when she signs out.)
   // The first answer 'wrong code' (the manager changed her code) stops the pings until she signs in again; the list shows her the sign-in.
   function pingTick() {
     if (!L.on || !L.pin || pingOff || document.visibilityState !== 'visible') return;
@@ -3080,10 +3084,28 @@ body.chatopen { overflow: hidden; }
     lapi({ action: 'ping', pin: L.pin }).catch(function (err) { if (err && err.bad && /^wrong code/i.test(err.message)) pingOff = true; });
   }
   setInterval(pingTick, PING_EVERY);
+  // ---- v92: the screen goes away, the screen comes back ----
+  // The office sees it to the second. When the phone is locked or another app opens, a small request with vis = 0 goes out at once (keepalive: it still reaches the
+  // server while the page is being hidden). When she is back, a request with vis = 1 goes out at once (unless another request has just gone out in the same moment:
+  // the list or the result of a call also says that she is back). Every request says vis, so a phone that misses one of these still tells the truth with the next.
+  var leaveSent = false;
+  function pingFail(err) { if (err && err.bad && /^wrong code/i.test(err.message)) pingOff = true; }
+  function leavePing() {
+    if (leaveSent || !L.on || !L.pin || pingOff) return;
+    leaveSent = true;
+    lapi({ action: 'ping', pin: L.pin, vis: 0 }, true).catch(pingFail);
+  }
+  function backPing() {
+    leaveSent = false;
+    if (!L.on || !L.pin || pingOff) return;
+    if (Date.now() - lastSent < 400 && lastVis === 1) return;      // (a request that said vis 0 does not count: a quick lock and unlock must end with vis 1)
+    lapi({ action: 'ping', pin: L.pin, vis: 1 }).catch(pingFail);
+  }
   document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState !== 'visible') return;
-    setTimeout(pingTick, 1500);                                 // a list or a result goes first; then a ping only if nothing went for a while
+    if (document.visibilityState === 'hidden') leavePing(); else backPing();
   });
+  window.addEventListener('pagehide', leavePing);               // some phones do not tell visibilitychange when the app is swiped away
+  window.addEventListener('pageshow', function (e) { if (e && e.persisted) backPing(); });
   // She pressed Call: the app goes to the background. keepalive lets this small request reach the server after the page is hidden.
   function awayPing() {
     if (!L.on || !L.pin || pingOff) return;
