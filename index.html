@@ -191,6 +191,23 @@ html[dir=rtl] .th button { right: auto; left: 4px; }
 .lres .seg.tall button { flex: 1 1 45%; }
 .badge.hot { background: #ef6c00; }
 .badge.soft { background: var(--line); color: var(--ink); }
+/* v97: the status of the driver in the Onboarding file has its own color on the card - the colors of the Call Center sheet: the word and its chip, not the card */
+.st-wait { --sf: #b25e00; --sg: #ffe9cc; }
+.st-att { --sf: #11693d; --sg: #d8f3e3; }
+.st-abs { --sf: #b3261e; --sg: #fde0e3; }
+.st-res { --sf: #1f4fa8; --sg: #dde9ff; }
+.st-wfa { --sf: #0d6b75; --sg: #d5f1f4; }
+.st-ans { --sf: #0b5a2e; --sg: #bdf0cf; }
+.st-gone { --sf: #4b535c; --sg: #e6e8eb; }
+:root[data-theme="dark"] .st-wait { --sf: #ffd966; --sg: #4a3d12; }
+:root[data-theme="dark"] .st-att { --sf: #7fe0a8; --sg: #1b4332; }
+:root[data-theme="dark"] .st-abs { --sf: #ffb3ba; --sg: #602a31; }
+:root[data-theme="dark"] .st-res { --sf: #8fbcff; --sg: #1d3656; }
+:root[data-theme="dark"] .st-wfa { --sf: #8fe3ea; --sg: #1d4a4f; }
+:root[data-theme="dark"] .st-ans { --sf: #c8f7d9; --sg: #1f6b3a; }
+:root[data-theme="dark"] .st-gone { --sf: #b5bac1; --sg: #3a3e45; }
+.stw { color: var(--sf); font-weight: 800; }
+.badge.stc { background: var(--sg); color: var(--sf); }
 .lcard.late { border-color: var(--bad); }
 .lcard.late .ltime { color: var(--bad); font-weight: 700; }
 .link.arm { color: var(--bad); }
@@ -386,7 +403,7 @@ body.chatopen { overflow: hidden; }
 <body>
 <header>
   <div class="hrow">
-    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v95</span></div></div>
+    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v97</span></div></div>
     <div class="hbtns"><button type="button" class="hb" id="lang" aria-label="Language"></button><button type="button" class="hb" id="theme" aria-label="Day or night"></button><button type="button" class="hb" id="out" hidden>Sign out</button></div>
   </div>
     <div id="tabs" hidden><button type="button" id="tabL" class="on">Leads</button><button type="button" id="tabD">New driver</button><button type="button" id="tabW">My wallet</button></div>
@@ -2100,7 +2117,7 @@ body.chatopen { overflow: hidden; }
   // ONE code for the whole page: the 4-digit code of the girl (the Agents tab of the Call Center sheet) opens the leads and New driver.
   var LEADS_URL = String(LEADS_API_URL || CFG.leadsUrl || '').trim();
   var L = { on: !!LEADS_URL && !/^PASTE/.test(LEADS_URL), waOn: false, pin: '', agent: '', duty: true, close: 22, push: -1, synced: false, loaded: false, dutyBusy: false, epoch: 0, tab: '', tabSet: false, tabs: {}, counts: {}, dueN: {}, done: 0, remaining: 0, wa: {}, cards: {}, open: {}, pending: null, busyList: false, shared: null, wantWho: false, last: '', vapid: '', called: {}, waTries: {}, chatTries: {}, pendingChat: null, pendingRes: null, resume: null, logging: false };
-  var LEADS_EVERY = CFG.leadsEvery || 30000;
+  var LEADS_EVERY = CFG.leadsEvery || 10000;          // v97: a status that changed in the Onboarding file shows on the card within seconds
   var WA_MIN_MS = CFG.waMinMs || 8000;          // she must stay in WhatsApp at least this long after she taps Send on WhatsApp (the second short try is accepted, the manager sees it as Short)
   var PEND_KEY = 'leadsPend', PEND_MAX_MS = 6 * 3600000;      // a call that waits for her to come back is kept on the phone; one older than 6 hours is dropped
   var CALL_MIN_MS = CFG.callMinMs || 16000;      // a call shorter than this did not happen (the phone only opened and closed). In Egypt the first ring comes after 3 to 5 seconds, a driver answers after 3 or 4 rings.
@@ -2236,6 +2253,8 @@ body.chatopen { overflow: hidden; }
   // ---- the wallet ----
   function money(n) { return T('{n} EGP', { n: String(Math.round(+n || 0)) }); }
   function onbT(st) { return T(st === 'Waiting' ? 'Waiting for Day0' : st); }      // the status of the driver in the Onboarding file, in the language of the page
+  var ONB_CLS = { 'Waiting': 'st-wait', 'Attend': 'st-att', 'Absent': 'st-abs', 'Rescheduled': 'st-res', 'Waiting for Active': 'st-wfa', 'Active No Show': 'st-ans', 'Attrition': 'st-gone' };
+  function onbC(st) { return ONB_CLS[st] || 'st-gone'; }      // v97: the color class of a status (the colors of the Call Center sheet)
   // The story of a card: the line of the event 'Onboarding' (the server writes: CODE: old -> new | money text) in words of the page. The money texts for the manager are not shown.
   function onbDetail(d) {
     d = String(d || '');
@@ -2878,8 +2897,10 @@ body.chatopen { overflow: hidden; }
       t = ld.due ? T('Call him back now') : T('next call {t}', { t: fmtWhen(ld.next) });
       cls = ld.due ? 'n-hot' : 'n-wait';
     } else if (tab === 'done') {
-      t = T('Registered') + (ld.code ? ' \u00b7 ' + ld.code : '') + (ld.onb ? ' \u00b7 ' + onbT(ld.onb) : (ld.active ? ' \u00b7 ' + T('Active') : ''));
+      var pre = T('Registered') + (ld.code ? ' \u00b7 ' + ld.code : ''), word = ld.onb ? onbT(ld.onb) : (ld.active ? T('Active') : '');
+      t = pre + (word ? ' \u00b7 ' + word : '');
       cls = 'n-ok';
+      if (word) return { t: t, cls: cls, pre: pre + ' \u00b7 ', w: word, wc: onbC(ld.onb || 'Active No Show') };      // v97: the word of the status has the color of the status
     } else if (tab === 'closed') {
       var rs = reasonText(ld.closeReason);
       t = T('Closed') + (rs ? ' \u00b7 ' + rs : '');
@@ -2905,7 +2926,9 @@ body.chatopen { overflow: hidden; }
     else if (tab === 'closed') when = fmtWhen(ld.updated);
     r.time.textContent = when;
     var nl = nextLine(ld);
-    r.next.textContent = nl.t; r.next.className = 'lnext ' + nl.cls; r.next.hidden = !nl.t;
+    r.next.className = 'lnext ' + nl.cls; r.next.hidden = !nl.t;
+    if (nl.w) { r.next.textContent = nl.pre; r.next.appendChild(el('span', 'stw ' + nl.wc, nl.w)); }      // v97: 'Registered . NH-0001 . ' and the status in its own color
+    else r.next.textContent = nl.t;
     r.phone.textContent = String(ld.phone || '');
     r.msg.textContent = msgText(ld.lastMessage);
     r.msg.hidden = !ld.lastMessage;
@@ -2917,7 +2940,7 @@ body.chatopen { overflow: hidden; }
     r.chWa.textContent = T('WhatsApp {n}', { n: nw }); r.chWa.hidden = !(nw > 0);
     r.chCode.textContent = String(ld.code || ''); r.chCode.hidden = !ld.code;
     r.chAct.textContent = ld.onb ? onbT(ld.onb) : (ld.active ? T('Active') : ''); r.chAct.hidden = !(ld.onb || ld.active);
-    r.chAct.className = (ld.onb === 'Active No Show' || (!ld.onb && ld.active)) ? 'badge ph' : (ld.onb === 'Waiting for Active' ? 'badge hot' : 'badge soft');
+    r.chAct.className = 'badge stc ' + onbC(ld.onb || 'Active No Show');      // v97: the chip has the color of the status
     var n = +ld.photos || 0;
     r.pics.textContent = n + (n === 1 ? ' photo' : ' photos');
     r.pics.parentNode.hidden = !(n > 0);
