@@ -386,7 +386,7 @@ body.chatopen { overflow: hidden; }
 <body>
 <header>
   <div class="hrow">
-    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v94</span></div></div>
+    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v95</span></div></div>
     <div class="hbtns"><button type="button" class="hb" id="lang" aria-label="Language"></button><button type="button" class="hb" id="theme" aria-label="Day or night"></button><button type="button" class="hb" id="out" hidden>Sign out</button></div>
   </div>
     <div id="tabs" hidden><button type="button" id="tabL" class="on">Leads</button><button type="button" id="tabD">New driver</button><button type="button" id="tabW">My wallet</button></div>
@@ -690,6 +690,11 @@ body.chatopen { overflow: hidden; }
     'Waiting for Day0': '\u0645\u0633\u062a\u0646\u064a \u0627\u0644\u062f\u0627\u064a \u0632\u064a\u0631\u0648',
     'Absent': '\u063a\u0627\u0628 \u0639\u0646 \u0627\u0644\u062f\u0627\u064a \u0632\u064a\u0631\u0648',
     'Rescheduled': '\u0627\u062a\u0623\u062c\u0644',
+    'Active No Show': '\u0623\u0643\u062a\u064a\u0641',
+    'Attrition': '\u0633\u0627\u0628 \u0627\u0644\u0634\u063a\u0644',
+    'Onboarding status': '\u062d\u0627\u0644\u0629 \u0627\u0644\u0623\u0648\u0646\u0628\u0648\u0631\u062f\u0646\u062c',
+    'Not guaranteed': '\u0645\u0634 \u0645\u0636\u0645\u0648\u0646\u0629',
+    'Money taken back: {n} EGP': '\u0627\u062a\u0634\u0627\u0644 {n} \u062c\u0646\u064a\u0647',
     'Loading...': '\u0628\u062d\u0645\u0651\u0644...',
     'Nothing yet.': '\u0644\u0633\u0647 \u0645\u0641\u064a\u0634 \u062d\u0627\u062c\u0629.',
     'Cancel': '\u0625\u0644\u063a\u0627\u0621',
@@ -2230,7 +2235,18 @@ body.chatopen { overflow: hidden; }
 
   // ---- the wallet ----
   function money(n) { return T('{n} EGP', { n: String(Math.round(+n || 0)) }); }
-  function stageT(st) { return T(st === 'Waiting' ? 'Waiting for Day0' : st); }      // the stage of the driver in the Onboarding file
+  function onbT(st) { return T(st === 'Waiting' ? 'Waiting for Day0' : st); }      // the status of the driver in the Onboarding file, in the language of the page
+  // The story of a card: the line of the event 'Onboarding' (the server writes: CODE: old -> new | money text) in words of the page. The money texts for the manager are not shown.
+  function onbDetail(d) {
+    d = String(d || '');
+    var m = /^[^:]*: .*? -> ([^|]*?)(?: \| (.*))?$/.exec(d);
+    if (!m) return d;
+    var out = onbT(m[1].replace(/^\s+|\s+$/g, '')), tx = m[2] || '', k;
+    if ((k = /^\+(\d+)(?: back)? \(Not confirmed\)/.exec(tx))) out += ' \u00b7 +' + money(k[1]) + ' \u00b7 ' + T('Not guaranteed');
+    else if ((k = /^(\d+) Confirmed(?:, bonus (\d+))?/.exec(tx))) out += ' \u00b7 ' + money(k[1]) + ' \u00b7 ' + T('Confirmed') + (k[2] ? ' \u00b7 ' + T('Bonus') + ' ' + money(k[2]) : '');
+    else if ((k = /^money taken back (\d+)/.exec(tx))) out += ' \u00b7 ' + T('Money taken back: {n} EGP', { n: k[1] });
+    return out;
+  }
   var WTYPE = { Call: 'Call payment', Active: 'Active driver', Bonus: 'Bonus', Advance: 'Advance', Payout: 'Payout', Reversal: 'Correction' };
   var WSTAT = { 'Not confirmed': 'Not confirmed', Confirmed: 'Confirmed', 'Paid out': 'Paid out', Cancelled: 'Cancelled', Requested: 'Waiting for the manager', Approved: 'Approved', Rejected: 'Not approved' };
   var WREQ = { Pending: 'Waiting for the manager', Approved: 'Approved. The manager will pay it.', Paid: 'The advance was paid.', Rejected: 'Not approved' };
@@ -2260,7 +2276,7 @@ body.chatopen { overflow: hidden; }
       l.appendChild(sm);
       var r = el('div', 'r');
       r.appendChild(el('b', '', (e.amount > 0 && e.type !== 'Advance' ? '+' : '') + money(e.amount)));
-      r.appendChild(el('span', 'chip', T(WSTAT[e.status] || e.status)));
+      r.appendChild(el('span', 'chip', T(e.type === 'Active' && e.status === 'Not confirmed' ? 'Not guaranteed' : (WSTAT[e.status] || e.status))));
       row.appendChild(l); row.appendChild(r);
       box.appendChild(row);
     });
@@ -2862,7 +2878,7 @@ body.chatopen { overflow: hidden; }
       t = ld.due ? T('Call him back now') : T('next call {t}', { t: fmtWhen(ld.next) });
       cls = ld.due ? 'n-hot' : 'n-wait';
     } else if (tab === 'done') {
-      t = T('Registered') + (ld.code ? ' \u00b7 ' + ld.code : '') + (ld.active ? ' \u00b7 ' + T('Active') : (ld.stage ? ' \u00b7 ' + stageT(ld.stage) : ''));
+      t = T('Registered') + (ld.code ? ' \u00b7 ' + ld.code : '') + (ld.onb ? ' \u00b7 ' + onbT(ld.onb) : (ld.active ? ' \u00b7 ' + T('Active') : ''));
       cls = 'n-ok';
     } else if (tab === 'closed') {
       var rs = reasonText(ld.closeReason);
@@ -2900,8 +2916,8 @@ body.chatopen { overflow: hidden; }
     r.chCalls.textContent = T('Calls {n}', { n: nc }); r.chCalls.hidden = !(nc > 0);
     r.chWa.textContent = T('WhatsApp {n}', { n: nw }); r.chWa.hidden = !(nw > 0);
     r.chCode.textContent = String(ld.code || ''); r.chCode.hidden = !ld.code;
-    r.chAct.textContent = ld.active ? T('Active') : (ld.stage ? stageT(ld.stage) : ''); r.chAct.hidden = !(ld.active || ld.stage);
-    r.chAct.className = ld.active ? 'badge ph' : (ld.stage === 'Waiting for Active' ? 'badge hot' : 'badge soft');
+    r.chAct.textContent = ld.onb ? onbT(ld.onb) : (ld.active ? T('Active') : ''); r.chAct.hidden = !(ld.onb || ld.active);
+    r.chAct.className = (ld.onb === 'Active No Show' || (!ld.onb && ld.active)) ? 'badge ph' : (ld.onb === 'Waiting for Active' ? 'badge hot' : 'badge soft');
     var n = +ld.photos || 0;
     r.pics.textContent = n + (n === 1 ? ' photo' : ' photos');
     r.pics.parentNode.hidden = !(n > 0);
@@ -2975,7 +2991,7 @@ body.chatopen { overflow: hidden; }
   }
 
   // ---- the story of a card (from the server Log) ----
-  var EVENTS = { 'New lead': 'Arrived', 'Reply': 'Replied', 'Message': 'Wrote again', 'Call': 'Call', 'Try': 'Short try', 'WhatsApp': 'WhatsApp', 'WhatsApp sent': 'WhatsApp sent', 'Update': 'Result', 'Close': 'Closed', 'Closed': 'Closed', 'Added': 'Registered', 'Assigned': 'Assigned', 'Reassigned': 'Moved', 'Upload': 'Photo', 'Active': 'Active', 'Sheet edit': 'Manager edit', 'Call note': 'Call summary', 'WA auto': 'Auto message' };
+  var EVENTS = { 'New lead': 'Arrived', 'Reply': 'Replied', 'Message': 'Wrote again', 'Call': 'Call', 'Try': 'Short try', 'WhatsApp': 'WhatsApp', 'WhatsApp sent': 'WhatsApp sent', 'Update': 'Result', 'Close': 'Closed', 'Closed': 'Closed', 'Added': 'Registered', 'Onboarding': 'Onboarding status', 'Assigned': 'Assigned', 'Reassigned': 'Moved', 'Upload': 'Photo', 'Active': 'Active', 'Sheet edit': 'Manager edit', 'Call note': 'Call summary', 'WA auto': 'Auto message' };
   function loadHistory(c) {
     var tl = c.r.tl;
     tl.hidden = false;
@@ -2988,7 +3004,7 @@ body.chatopen { overflow: hidden; }
         var row = el('div', 'tlrow');
         row.appendChild(el('span', 'tlt', String(h.t || '')));
         row.appendChild(el('span', 'tle', T(EVENTS[h.e] || h.e)));
-        var d = String(h.d || '').replace(/^\[Short WhatsApp \d+s\] /, '');
+        var d = h.e === 'Onboarding' ? onbDetail(h.d) : String(h.d || '').replace(/^\[Short WhatsApp \d+s\] /, '');
         if (d) { var sp = el('span', 'tld', d); sp.dir = 'auto'; row.appendChild(sp); }
         tl.appendChild(row);
       });
@@ -3167,7 +3183,8 @@ body.chatopen { overflow: hidden; }
     if (!f || !L.on || !L.pin) return;
     S.from = null;
     var code = S.savedCode || ''; S.savedCode = '';
-    lapi({ action: 'added', pin: L.pin, id: f.id, code: code }).then(function () { leadsRefresh(); }).catch(function () { });
+    var dph = S.fields && S.fields.phone ? String(S.fields.phone) : '';      // the phone of the driver (the form): the card is linked to his row in the Onboarding file by it
+    lapi({ action: 'added', pin: L.pin, id: f.id, code: code, dphone: dph }).then(function () { leadsRefresh(); }).catch(function () { });
   }
 
   // ---- photos shared from WhatsApp (Android): the service worker keeps them, this page asks who they are for ----
