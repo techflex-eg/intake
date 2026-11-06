@@ -403,7 +403,7 @@ body.chatopen { overflow: hidden; }
 <body>
 <header>
   <div class="hrow">
-    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v97</span></div></div>
+    <div><h1 class="office" id="office"></h1><div class="who"><span id="hello" hidden></span><span id="ver">v98</span></div></div>
     <div class="hbtns"><button type="button" class="hb" id="lang" aria-label="Language"></button><button type="button" class="hb" id="theme" aria-label="Day or night"></button><button type="button" class="hb" id="out" hidden>Sign out</button></div>
   </div>
     <div id="tabs" hidden><button type="button" id="tabL" class="on">Leads</button><button type="button" id="tabD">New driver</button><button type="button" id="tabW">My wallet</button></div>
@@ -2483,6 +2483,7 @@ body.chatopen { overflow: hidden; }
   }
   function fmtWhen(s) {
     s = String(s || '');
+    if (s.length === 10) return s.slice(8, 10) + '/' + s.slice(5, 7);      // v98: a day only (Postponed)
     if (s.length < 16) return '';
     var d = new Date(), pad = function (n) { return ('0' + n).slice(-2); };
     var td = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
